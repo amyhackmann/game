@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Unicorn Cookie Bakery">
+<meta name="theme-color" content="#1a0a2e">
+<title>Unicorn Cookie Bakery</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: #1a0a2e;
+  font-family: 'Press Start 2P', monospace, sans-serif;
+  color: #fff; touch-action: manipulation;
+}
+
+/* ── App shell — sits below fixed navbar ── */
+#app {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; overflow: hidden;
+  /* top set by JS to match navbar height */
+}
+
+/* ══════════════════════════════════════
+   TOP NAV BAR
+══════════════════════════════════════ */
+#navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: #0d0628;
+  border-bottom: 2px solid #ffd700;
+  padding: 2px 3px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  z-index: 100;
+  overflow: hidden;
+}
+#navbar-title {
+  flex: 1;
+  font-size: 12px; color: #ffd700;
+  text-shadow: 1px 1px #8b0000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  line-height: 1.4;
+  min-width: 0;
+  padding-left: 48px;
+  margin-left: 0;
+}
+#navbar-line1 {
+  display: block;
+  text-align: left;
+  white-space: nowrap;
+  padding-left: 0;
+}
+#navbar-line2 {
+  display: block;
+  text-align: left;
+  white-space: nowrap;
+  padding-left: 0;
+}
+#navbar-unicorn { font-size: 18px; vertical-align: middle; }
+#navbar-cookie  { font-size: 18px; vertical-align: middle; }
+#navbar-btns {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+  flex-shrink: 0;
+  padding-right: 8px;
+}
+#navbar-btns .nav-btn {
+  width: 90px;
+}
+
+/* 3D raised nav buttons */
+.nav-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 0 5px;
+  height: 34px;
+  background: #c0c0c0;
+  color: #000080;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: nowrap;
+  flex-shrink: 0;
+  /* Win3.1 3D raised look */
+  border-top:    3px solid #ffffff;
+  border-left:   3px solid #ffffff;
+  border-right:  3px solid #404040;
+  border-bottom: 3px solid #404040;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 2px;
+}
+.nav-btn:active {
+  border-top:    3px solid #404040;
+  border-left:   3px solid #404040;
+  border-right:  3px solid #ffffff;
+  border-bottom: 3px solid #ffffff;
+  transform: translate(1px,1px);
+}
+
+/* ══════════════════════════════════════
+   MIDDLE AREA — status + grid
+══════════════════════════════════════ */
+#middle {
+  flex: 1 1 0; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: 0; gap: 2px;
+}
+
+/* Shared slot — infobar and gobar swap here, no extra height taken */
+#infoslot { flex-shrink: 0; }
+
+#infobar {
+  display: flex; gap: 6px; align-items: stretch;
+  flex-wrap: nowrap;
+}
+#status {
+  flex: 1; font-size: 9px; color: #00ff88; line-height: 1.7;
+  padding: 5px 8px; background: #061206;
+  border-top:    2px solid #404040;
+  border-left:   2px solid #404040;
+  border-right:  2px solid #00aa55;
+  border-bottom: 2px solid #00aa55;
+  min-width: 0;
+}
+#legend {
+  flex-shrink: 0;
+  display: flex; gap: 5px; align-items: center; flex-wrap: wrap;
+  padding: 4px 6px; background: #0d0628;
+  border: 1px solid #333;
+}
+.lg { font-size: 8px; color: #ccc; display: flex; align-items: center; gap: 4px; line-height: 1; }
+
+/* Legend cell samples — Win3.1 3D */
+.ld {
+  width: 20px; height: 20px; font-size: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-top: 2px solid #fff; border-left: 2px solid #fff;
+  border-right: 2px solid #5a5a5a; border-bottom: 2px solid #5a5a5a;
+}
+
+/* Game over bar — single compact row, same height as infobar */
+#gobar {
+  display: none;
+  background: #200840; border: 2px solid #ffd700;
+  padding: 4px 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+#go-left {
+  display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;
+}
+#go-title { font-size: 10px; color: #ffd700; line-height: 1.6; }
+#go-score { font-size: 10px; color: #00ff88; }
+#go-actions { display: flex; gap: 4px; flex-wrap: wrap; flex-shrink: 0; }
+
+/* 3D action buttons — same Win3.1 style as nav */
+.act-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px; padding: 0 6px; height: 34px;
+  background: #c0c0c0; color: #000080;
+  border: none; cursor: pointer; touch-action: manipulation;
+  white-space: nowrap; flex-shrink: 0;
+  border-top:    3px solid #ffffff;
+  border-left:   3px solid #ffffff;
+  border-right:  3px solid #404040;
+  border-bottom: 3px solid #404040;
+  display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+}
+.act-btn:active {
+  border-top:    3px solid #404040;
+  border-left:   3px solid #404040;
+  border-right:  3px solid #ffffff;
+  border-bottom: 3px solid #ffffff;
+  transform: translate(1px,1px);
+}
+
+/* ══════════════════════════════════════
+   GRID — fills every remaining pixel
+══════════════════════════════════════ */
+#grid-wrap {
+  flex: 1 1 0; min-height: 0; min-width: 0;
+  border: 2px solid #888; background: #c0c0c0;
+  overflow: hidden; display: flex;
+  align-items: flex-start; justify-content: flex-start;
+}
+#grid { display: grid; }
+
+/* ── Cells — Win3.1 3D raised ── */
+.cell {
+  display: flex; align-items: center; justify-content: center;
+  background: #c0c0c0; color: #000080;
+  user-select: none; touch-action: manipulation; cursor: default;
+  border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
+  border-right: 2px solid #5a5a5a; border-bottom: 2px solid #5a5a5a;
+  font-family: 'Press Start 2P', monospace; overflow: hidden; font-weight: bold;
+}
+/* TAP cells — grey 3D raised (not yellow) */
+.cell.tap {
+  background: #fffacd; cursor: pointer;
+  border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
+  border-right: 2px solid #5a5a5a; border-bottom: 2px solid #5a5a5a;
+  color: #000080;
+}
+.cell.tap:active {
+  background: #ffe88a;
+  border-top: 2px solid #5a5a5a; border-left: 2px solid #5a5a5a;
+  border-right: 2px solid #ffffff; border-bottom: 2px solid #ffffff;
+}
+/* Player */
+.cell.player {
+  background: #ff88ee;
+  border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
+  border-right: 2px solid #aa44aa; border-bottom: 2px solid #aa44aa;
+}
+/* Baked cookie — sunken */
+.cell.baked {
+  background: #c0c0c0;
+  border-top: 2px solid #5a5a5a; border-left: 2px solid #5a5a5a;
+  border-right: 2px solid #ffffff; border-bottom: 2px solid #ffffff;
+}
+/* Monster — YELLOW background, red border, purple emoji pops! */
+.cell.monster {
+  background: #ffffff;
+  border: 3px solid #cc0000;
+  outline: 2px solid #880000;
+  outline-offset: -5px;
+}
+/* Revealed (game over) — dimmed sunken */
+.cell.revealed {
+  background: #aaaaaa; color: #333333;
+  border-top: 2px solid #5a5a5a; border-left: 2px solid #5a5a5a;
+  border-right: 2px solid #e0e0e0; border-bottom: 2px solid #e0e0e0;
+}
+
+/* ══════════════════════════════════════
+   SLIDE-UP SAVE/SHARE PANEL
+══════════════════════════════════════ */
+#go-detail {
+  display: none; position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #120430; border-top: 3px solid #ffd700;
+  padding: 12px 14px 28px; z-index: 30; text-align: center;
+}
+#go-detail-close {
+  position: absolute; top: 8px; right: 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px; color: #ffd700; background: none; border: none; cursor: pointer;
+}
+#go-flavor {
+  font-size: 8px; color: #ff9ff3; display: block;
+  margin-bottom: 12px; line-height: 2.4;
+}
+.init-row {
+  display: flex; gap: 8px; justify-content: center;
+  align-items: center; flex-wrap: wrap; margin: 8px 0;
+}
+.init-row span { font-size: 7px; color: #aaa; }
+#initials {
+  font-family: 'Press Start 2P', monospace; font-size: 14px;
+  padding: 6px; background: #0a0020; border: 2px solid #ffd700;
+  color: #ffd700; text-align: center; width: 76px;
+  text-transform: uppercase; height: 42px;
+}
+.share-box {
+  background: #061206; border: 1px solid #00ff88;
+  padding: 8px; margin: 8px 0; font-size: 7px; color: #00ff88;
+  line-height: 2; word-break: break-word; white-space: pre-line; text-align: left;
+}
+.go-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+
+/* ══════════════════════════════════════
+   FULL-SCREEN OVERLAYS
+══════════════════════════════════════ */
+.screen {
+  display: none; position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #1a0a2e; overflow-y: auto;
+  -webkit-overflow-scrolling: touch; padding: 8px; z-index: 10;
+  /* padding-top set by JS to clear navbar */
+}
+/* Spacer so content starts below navbar — set by JS */
+.screen-inner { padding-top: 8px; }
+.screen.open { display: block; }
+.screen h2 { font-size: 12px; color: #ffd700; margin-bottom: 8px; text-align: center; }
+.scr-back { text-align: center; margin-top: 8px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.sec { background: #2d1b69; border: 1px solid #ffd700; padding: 8px 10px; margin: 5px 0; border-radius: 2px; }
+.sec h3 { font-size: 10px; color: #ff9ff3; margin-bottom: 7px; }
+.sec p, .sec li { font-size: 10px; color: #ddd; line-height: 2.0; margin-bottom: 2px; }
+.sec ol { padding-left: 0; list-style: none; }
+.stbl { width: 100%; border-collapse: collapse; font-size: 9px; }
+.stbl th { color: #ffd700; border-bottom: 1px solid #ffd700; padding: 3px 3px; text-align: left; font-size: 9px; }
+.stbl td { color: #ddd; padding: 2px 3px; border-bottom: 0.5px solid #2d1b69; font-size: 9px; }
+.stbl tr:nth-child(even) td { background: #1f0f3d; }
+
+/* Shared overlay close button */
+.overlay-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px; padding: 0 14px; height: 42px;
+  background: #c0c0c0; color: #000080; border: none;
+  cursor: pointer; touch-action: manipulation; white-space: nowrap;
+  border-top: 3px solid #ffffff; border-left: 3px solid #ffffff;
+  border-right: 3px solid #404040; border-bottom: 3px solid #404040;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+}
+.overlay-btn:active {
+  border-top: 3px solid #404040; border-left: 3px solid #404040;
+  border-right: 3px solid #ffffff; border-bottom: 3px solid #ffffff;
+  transform: translate(1px,1px);
+}
+.overlay-btn.danger { background: #c04040; color: #fff; }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: #00ff88; color: #1a0a2e;
+  font-family: 'Press Start 2P', monospace; font-size: 8px;
+  padding: 10px 18px; border-radius: 2px;
+  display: none; z-index: 99; white-space: nowrap;
+}
+
+#credit { font-size: 8px; color: #ffffff; text-align: center; padding: 3px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<!-- ═══ NAVBAR — truly fixed, always on top ═══ -->
+<div id="navbar">
+  <div id="navbar-title">
+    <div id="navbar-line1"><span id="navbar-unicorn">&#x1F984;</span> UNICORN</div>
+    <div id="navbar-line2">COOKIE BAKERY <span id="navbar-cookie">&#x1F36A;</span></div>
+  </div>
+  <div id="navbar-btns">
+    <button class="nav-btn" onclick="startGame(false)"><span style="font-size:11px">&#x1F3AE;</span> NEW</button>
+    <button class="nav-btn" onclick="startGame(true)"><span style="font-size:11px">&#x1F4C5;</span> DAILY</button>
+    <button class="nav-btn" onclick="openScreen('howto')"><span style="font-size:11px">&#x2753;</span> HOW</button>
+    <button class="nav-btn" onclick="openScreen('scores')"><span style="font-size:11px">&#x1F3C6;</span> SCORES</button>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ═══ MIDDLE: info + grid ═══ -->
+  <div id="middle">
+
+    <!-- Infoslot: infobar during play, gobar on game over — same fixed height -->
+    <div id="infoslot">
+
+      <div id="infobar">
+        <div id="status">Tap NEW or DAILY to start baking! &#x1F984;</div>
+        <div id="legend">
+          <div class="lg"><span class="ld" style="background:#ff88ee">&#x1F984;</span>YOU</div>
+          <div class="lg"><span class="ld" style="background:#c0c0c0;border-top:2px solid #5a5a5a;border-left:2px solid #5a5a5a;border-right:2px solid #fff;border-bottom:2px solid #fff">&#x1F36A;</span>COOKIES</div>
+          <div class="lg"><span class="ld" style="background:#fffacd">&#x25A1;</span>TAP</div>
+          <div class="lg"><span class="ld" style="background:#ffffff;border:2px solid #cc0000">&#x1F47E;</span>MONSTER</div>
+        </div>
+      </div>
+
+      <div id="gobar">
+        <div id="go-left">
+          <span id="go-title"></span>
+          <span id="go-score"></span>
+        </div>
+        <div id="go-actions">
+          <button class="act-btn" onclick="showDetail()"><span style="font-size:13px">&#x1F4BE;</span> SAVE</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- GRID — takes all remaining space -->
+    <div id="grid-wrap"><div id="grid"></div></div>
+
+  </div>
+
+  <div id="credit"><a href="mailto:amy@amyhackmannconsulting.com" style="color:#ffffff;text-decoration:none">amy@amyhackmannconsulting.com</a> | Unicorn Cookie Bakery | &#xA9; AMY HACKMANN 2026</div>
+</div>
+
+<!-- Slide-up save/share -->
+<div id="go-detail">
+  <button id="go-detail-close" onclick="hideDetail()"><span style="font-size:18px">&#x2715;</span></button>
+  <span id="go-flavor"></span>
+  <div class="init-row">
+    <span>INITIALS:</span>
+    <input id="initials" maxlength="3" value="AAA"
+      autocomplete="off" autocorrect="off" autocapitalize="characters"/>
+    <button class="overlay-btn" onclick="saveScore()">SAVE &#x1F4BE;</button>
+  </div>
+  <div id="share-area" style="display:none">
+    <div class="share-box" id="share-text"></div>
+    <button class="overlay-btn" onclick="copyShare()"><span style="font-size:16px">&#x1F4CB;</span> COPY &amp; SHARE</button>
+  </div>
+  <div class="go-btns">
+
+    <button class="overlay-btn" onclick="hideDetail();hideGobar();openScreen('scores')"><span style="font-size:16px">&#x1F3C6;</span> SCORES</button>
+    <button class="overlay-btn" onclick="hideDetail();hideGobar()"><span style="font-size:13px">&#x1F3E0;</span> MENU</button>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div class="screen" id="screen-howto">
+  <div class="screen-inner">
+  <h2>HOW TO PLAY</h2>
+  <div class="sec">
+    <p>&#x1F984; Bake as many cookies as possible!</p>
+    <p>&#x1F47E; Avoid the 5 hidden Cookie Monsters!</p>
+  </div>
+  <div class="sec">
+    <p>&#x25A1; Tap a yellow cell next to your unicorn</p>
+    <p>&#x1F522; The number you hit = cookies baked in that row</p>
+    <p>&#x1F984; Your unicorn moves to end of the row</p>
+    <p>&#x1F501; Keep chaining to bake as many as you can!</p>
+  </div>
+  <div class="sec">
+    <p>&#x1F6D1; GAME OVER if you...</p>
+    <p>&#x1F47E; Hit a Cookie Monster</p>
+    <p>&#x1F36A; Run into your own Cookie trail</p>
+    <p>&#x1F6AB; Fall off the edge</p>
+  </div>
+  <div class="sec">
+    <p>&#x1F4C5; Daily = Challenge your friends to the same grid (new one daily!)</p>
+    <p id="scoring-text">&#x1F3C6; Score = Top 25 Scores for the Game</p>
+  </div>
+
+  </div>
+</div>
+
+<!-- HIGH SCORES -->
+<div class="screen" id="screen-scores">
+  <div class="screen-inner">
+  <h2>&#x1F3C6; TOP 25 HIGH SCORES!</h2>
+  <div id="scores-content"></div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const MONSTERS=5;
+let COLS=12, ROWS=18, TOTAL=211;
+let grid=[], pos={x:0,y:0}, baked=0, active=false, isDaily=false;
+let scores=JSON.parse(localStorage.getItem('mcb_v7')||'[]');
+let SZ=20;
+
+function pickGrid(){
+  const W=window.innerWidth, H=window.innerHeight, land=W>H;
+
+  // Estimate grid area: full width, height minus navbar + infoslot + credit
+  const navbar = document.getElementById('navbar');
+  const infoslot = document.getElementById('infoslot');
+  const credit = document.getElementById('credit');
+  const usedH = (navbar ? navbar.offsetHeight : 50)
+              + (infoslot ? infoslot.offsetHeight : 40)
+              + (credit ? credit.offsetHeight : 16)
+              + 12; // gaps
+  const gridH = H - usedH;
+  const gridW = W;
+
+  if(W <= 480 && !land) {
+    // Phone portrait — tall narrow grid
+    // Pick cols/rows to fill the available area with ~18-22px cells
+    COLS = Math.floor(gridW / 20);
+    ROWS = Math.floor(gridH / 20);
+  } else if(W <= 480 && land) {
+    // Phone landscape — wide short grid
+    COLS = Math.floor(gridW / 22);
+    ROWS = Math.floor(gridH / 22);
+  } else if(W <= 1024 && !land) {
+    // Tablet portrait
+    COLS = Math.floor(gridW / 24);
+    ROWS = Math.floor(gridH / 24);
+  } else if(W <= 1024 && land) {
+    // Tablet landscape
+    COLS = Math.floor(gridW / 26);
+    ROWS = Math.floor(gridH / 26);
+  } else {
+    // Desktop
+    COLS = Math.floor(gridW / 28);
+    ROWS = Math.floor(gridH / 28);
+  }
+
+  // Clamp to sensible game bounds
+  COLS = Math.max(8,  Math.min(COLS, 30));
+  ROWS = Math.max(8,  Math.min(ROWS, 30));
+
+  // Total playable cells minus monsters
+  TOTAL = (COLS * ROWS) - MONSTERS;
+}
+
+function layout(){
+  const wrap=document.getElementById('grid-wrap');
+  // Use full clientWidth/Height — border accounted for by box-sizing
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  // Cell size: fit whichever dimension is tighter, no artificial floor
+  const szW=Math.floor(W/COLS);
+  const szH=Math.floor(H/ROWS);
+  SZ=Math.max(10, Math.min(szW, szH));
+  const g=document.getElementById('grid');
+  // Stretch grid to fill full wrap using fr units via auto fill
+  g.style.gridTemplateColumns='repeat('+COLS+','+SZ+'px)';
+  g.style.width=(SZ*COLS)+'px';
+  g.style.height=(SZ*ROWS)+'px';
+  // Centre the grid inside the wrap if cells don't perfectly fill
+  wrap.style.alignItems=(SZ*ROWS>=H)?'flex-start':'center';
+  wrap.style.justifyContent=(SZ*COLS>=W)?'flex-start':'center';
+}
+function numFS(){ return Math.max(6,Math.floor(SZ*0.44))+'px'; }
+function emoFS(){ return Math.max(9,Math.floor(SZ*0.62))+'px'; }
+
+function rng(seed){
+  let s=seed;
+  return ()=>{ s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; };
+}
+function todaySeed(){
+  const d=new Date();
+  return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+}
+function dateStr(){
+  return new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function startGame(daily){
+  isDaily=daily; baked=0; active=true;
+  // Close any open overlay screens first
+  document.querySelectorAll('.screen.open').forEach(s=>s.classList.remove('open'));
+  hideGobar(); hideDetail();
+  pickGrid();
+  const mEl=document.getElementById('mission-text');
+  if(mEl) mEl.textContent='You are a unicorn on a mission to bake as many as '+TOTAL+' cookies! Avoid the '+MONSTERS+' hidden Cookie Monsters across the '+COLS+'x'+ROWS+' grid!';
+  const sEl=document.getElementById('scoring-text');
+  if(sEl) sEl.textContent='Score = % of '+TOTAL+' cookies baked ('+COLS+'x'+ROWS+' grid)';
+
+  const rand=daily?rng(todaySeed()):rng(Math.floor(Math.random()*999999));
+  grid=[];
+  for(let y=0;y<ROWS;y++){
+    grid[y]=[];
+    for(let x=0;x<COLS;x++) grid[y][x]={n:Math.floor(rand()*9)+1,s:'h',m:false};
+  }
+  let placed=0;
+  while(placed<MONSTERS){
+    const mx=Math.floor(rand()*COLS),my=Math.floor(rand()*ROWS);
+    if(!grid[my][mx].m){grid[my][mx].m=true;placed++;}
+  }
+  let px=Math.floor(rand()*COLS),py=Math.floor(rand()*ROWS);
+  while(grid[py][px].m){px=Math.floor(rand()*COLS);py=Math.floor(rand()*ROWS);}
+  pos={x:px,y:py}; grid[py][px].s='p';
+  layout(); render(); setStatus();
+}
+
+function render(){
+  layout();
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  const adj=getAdj();
+  const nfs=numFS(), efs=emoFS();
+  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
+    const c=grid[y][x];
+    const el=document.createElement('div');
+    el.className='cell';
+    el.style.width=el.style.height=SZ+'px';
+    const isAdj=active&&adj.some(a=>a.x===x&&a.y===y);
+    if(c.s==='p'){
+      el.classList.add('player'); el.textContent='🦄'; el.style.fontSize=efs;
+    } else if(c.s==='b'){
+      el.classList.add('baked'); el.textContent='🍪'; el.style.fontSize=efs;
+    } else if(c.s==='m'){
+      el.classList.add('monster'); el.textContent='👾'; el.style.fontSize=efs;
+    } else if(c.s==='r'){
+      el.classList.add('revealed'); el.textContent=c.n; el.style.fontSize=nfs;
+    } else {
+      el.textContent=c.n; el.style.fontSize=nfs;
+      if(isAdj){
+        el.classList.add('tap');
+        el.addEventListener('touchend',e=>{e.preventDefault();tap(x,y);},{passive:false});
+        el.onclick=()=>tap(x,y);
+      }
+    }
+    g.appendChild(el);
+  }
+}
+
+function getAdj(){
+  if(!active) return [];
+  const a=[];
+  for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+    if(!dx&&!dy) continue;
+    const nx=pos.x+dx,ny=pos.y+dy;
+    if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS&&grid[ny][nx].s==='h') a.push({x:nx,y:ny});
+  }
+  return a;
+}
+
+function tap(tx,ty){
+  if(!active) return;
+  const dx=tx-pos.x,dy=ty-pos.y,steps=grid[ty][tx].n;
+  grid[pos.y][pos.x].s='b'; baked++;
+  let cx=tx,cy=ty,hitM=false,hitE=false,hitB=false;
+  for(let i=0;i<steps;i++){
+    if(i>0){cx+=dx;cy+=dy;} else{cx=tx;cy=ty;}
+    if(i>0){
+      if(cx<0||cx>=COLS||cy<0||cy>=ROWS){hitE=true;break;}
+      if(grid[cy][cx].s==='b'){hitB=true;break;}
+    }
+    if(grid[cy][cx].m){hitM=true;break;}
+    grid[cy][cx].s='b'; baked++;
+  }
+  if(hitM){endGame('monster');return;}
+  if(hitE){endGame('edge');return;}
+  if(hitB){endGame('baked');return;}
+  pos={x:cx,y:cy}; grid[cy][cx].s='p';
+  if(!getAdj().length){endGame('nomoves');return;}
+  render(); setStatus();
+}
+
+function endGame(reason){
+  active=false;
+  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++)
+    if(grid[y][x].s==='h') grid[y][x].s=grid[y][x].m?'m':'r';
+  render();
+
+  const pct=((baked/TOTAL)*100).toFixed(1);
+  const band=Math.min(20,Math.floor(parseFloat(pct)/5));
+
+  document.getElementById('go-title').textContent=
+    reason==='monster'?'👾 You Hit a Cookie Monster!':
+    reason==='edge'   ?'🌌 You fell off the edge of the Grid!':
+    reason==='baked'  ?'🍪 You ran into your own cookie trail!':
+                       '🍪 No more moves left!';
+  document.getElementById('go-score').textContent=
+    baked+' of '+TOTAL+' cookies baked ('+pct+'%)';
+
+  const MM=[
+    'Ambushed immediately! The Monster was waiting! 👾',
+    'Barely out of the gate! The Monster pounced! 👾',
+    'Just warming up when — CHOMP! 👾😱',
+    'Getting started then Monster strikes! Keep going! 👾',
+    'A fifth of the way! The Monster got lucky! 👾',
+    'Quarter done! Not bad — watch those Monsters! 👾🍪',
+    '30%! You\'re learning the grid! 👾🦄',
+    'Solid effort! The Monster was sneaky! 🦄👾',
+    'Nearly half! That Monster had good timing! 👾🍪',
+    'So close to half! The Monster disagreed! 👾😤',
+    'HALFWAY HERO! You\'re an incredible baker! That Monster got SO lucky! 🦄🍪🔥',
+    'AMAZING! Over half baked and still going strong! You\'re a star! 🦄🍪⭐',
+    'OUTSTANDING! 60% baked! You\'re a Cookie Legend in the making! 🦄🍪🌟',
+    'BRILLIANT! Nearly 70%! You should be SO proud of that baking! 🦄🍪🎉',
+    'WOW! 70%! You are an ELITE baker! That Monster had NO right! 🦄🍪👑',
+    'THREE QUARTERS! You are INCREDIBLE! The Monster got absolutely lucky! 🦄🍪👑🔥',
+    '80%!! You are a MASTER BAKER! That Monster should be ASHAMED! 🦄🍪🏆🔥',
+    'PHENOMENAL! 85%+! You are basically a Cookie GOD! Almost had them ALL! 🦄🍪👑🔥',
+    'EXTRAORDINARY!! 90%! ELITE baker! One sneaky Monster cost you glory! 🦄🍪🏆🔥🌟',
+    'ARE YOU KIDDING?! 95%+!! COOKIE LEGEND! ONE Monster stood between you and immortality! 🦄🍪👑🏆🔥🌟',
+    'UNREAL!! YOU BAKED THEM ALL!! GREATEST BAKER IN THE UNIVERSE!! 🦄🍪👑🏆🔥🌟🎉🎊'
+  ];
+  const EM=[
+    'Oops! You baked yourself right off the edge of the grid! 🌌',
+    'Off so soon! Mind the edges! 🌌😬',
+    'Edge got you early! Stay in the kitchen! 🌌🦄',
+    'The edge is sneaky! You\'ll avoid it next time! 🌌',
+    '20% then whoosh! Watch those borders! 🌌🍪',
+    'Quarter done before the fall! Not bad! 🌌🦄',
+    '30% baked before tumbling off! Getting better! 🌌🍪',
+    'Solid baking before the big fall! 🌌🦄🍪',
+    'Nearly half before the edge got you! 🌌🍪🦄',
+    'So close to half! The edge disagreed! 🌌😤',
+    'HALFWAY HERO! Incredible baking before the fall! You\'re amazing! 🌌🦄🍪🔥',
+    'AMAZING! Over half baked! The edge robbed a superstar! 🌌🦄🍪⭐',
+    'OUTSTANDING! 60%! You\'re a Cookie Legend — the edge got SO lucky! 🌌🦄🍪🌟',
+    'BRILLIANT! Nearly 70% before the fall! You should be SO proud! 🌌🦄🍪🎉',
+    'WOW! 70%! You are ELITE! The edge had absolutely no right! 🌌🦄🍪👑',
+    'THREE QUARTERS before the fall! You are INCREDIBLE! 🌌🦄🍪👑🔥',
+    '80%!! MASTER BAKER! The edge stole your destiny! 🌌🦄🍪🏆🔥',
+    'PHENOMENAL! 85%+! Cookie GOD level baking! The edge barely stopped you! 🌌🦄🍪👑🔥',
+    'EXTRAORDINARY!! 90%! ELITE baking! The edge robbed a LEGEND! 🌌🦄🍪🏆🔥🌟',
+    'ARE YOU KIDDING?! 95%+!! The edge stole your IMMORTALITY! Unbelievable! 🌌🦄🍪👑🏆🔥🌟',
+    'UNREAL!! YOU BAKED THEM ALL!! GREATEST BAKER IN THE UNIVERSE!! 🦄🍪👑🏆🔥🌟🎉🎊'
+  ];
+  const TM=[
+    'Boxed in immediately! Tight spot! 🍪😬',
+    'Cornered early! Plan your path! 🍪🦄',
+    'Your own cookies blocked you! Tricky grid! 🍪',
+    'Hemmed in! Your trail outsmarted you! 🍪🦄',
+    '20% before getting cornered! Learning the ropes! 🍪🦄',
+    'Quarter baked before the dead end! Not bad! 🍪🦄',
+    '30% and then boxed in! Getting the hang of it! 🍪🦄',
+    'Solid run before your trail caught you! 🍪🦄✨',
+    'Nearly half before the dead end! Great effort! 🍪🦄',
+    'So close to half! Your own trail is a tough opponent! 🍪🦄',
+    'HALFWAY HERO! Your trail strategy was incredible! You\'re a star! 🍪🦄🔥',
+    'AMAZING! Past halfway! You\'re a Cookie Strategist extraordinaire! 🍪🦄⭐',
+    'OUTSTANDING! 60% baked! Cookie Legend in the making! 🍪🦄🌟',
+    'BRILLIANT! Nearly 70%! Your trail mastery is extraordinary! 🍪🦄🎉',
+    'WOW! 70%! ELITE Cookie Strategist! Your own trail had NO right stopping you! 🍪🦄👑',
+    'THREE QUARTERS! INCREDIBLE strategy! You are a baking GENIUS! 🍪🦄👑🔥',
+    '80%!! MASTER BAKER! Your trail maze was a work of ART! 🍪🦄🏆🔥',
+    'PHENOMENAL! 85%+! Cookie GENIUS! You nearly had them ALL! 🍪🦄👑🔥',
+    'EXTRAORDINARY!! 90%! Your trail was PERFECTION — almost! ELITE baker! 🍪🦄🏆🔥🌟',
+    'ARE YOU KIDDING?! 95%+!! Your own genius nearly beat you! COOKIE LEGEND! 🍪🦄👑🏆🔥🌟',
+    'UNREAL!! YOU BAKED THEM ALL!! GREATEST BAKER IN THE UNIVERSE!! 🦄🍪👑🏆🔥🌟🎉🎊'
+  ];
+
+  document.getElementById('go-flavor').textContent=
+    reason==='monster'?MM[band]:reason==='edge'?EM[band]:TM[band];
+
+  if(isDaily){
+    document.getElementById('share-area').style.display='block';
+    document.getElementById('share-text').textContent=
+      '🦄 Unicorn Cookie Bakery\nDaily Challenge — '+dateStr()+
+      '\nI baked '+baked+' of '+TOTAL+' cookies ('+pct+'%)\n#UnicornCookieBakery #BakeThemAll';
+  } else {
+    document.getElementById('share-area').style.display='none';
+  }
+
+  // Hide infobar, show gobar
+  document.getElementById('infobar').style.display='none';
+  document.getElementById('gobar').style.display='flex';
+  setStatus(baked+' out of '+TOTAL+' cookies baked! ('+pct+'%) '+(reason==='monster'?'👾':reason==='edge'?'🌌':'🍪'));
+}
+
+function setStatus(msg){
+  const pct=((baked/TOTAL)*100).toFixed(1);
+  document.getElementById('status').textContent=
+    msg||(baked+' out of '+TOTAL+'  cookies baked! ('+pct+'%)'+(isDaily?' 📅':''));
+}
+
+function saveScore(){
+  const ini=(document.getElementById('initials').value||'AAA').toUpperCase().slice(0,3);
+  const pct=parseFloat(((baked/TOTAL)*100).toFixed(1));
+  scores.push({ini,pct,date:dateStr(),daily:isDaily});
+  scores.sort((a,b)=>b.pct-a.pct);
+  scores=scores.slice(0,25);
+  localStorage.setItem('mcb_v7',JSON.stringify(scores));
+  toast('Score saved! 🦄🍪');
+  hideDetail(); hideGobar(); openScreen('scores');
+}
+function clearScores(){
+  if(!confirm('Clear all high scores?')) return;
+  scores=[]; localStorage.removeItem('mcb_v7');
+  renderScores(); toast('Scores cleared!');
+}
+function renderScores(){
+  const el=document.getElementById('scores-content');
+  if(!scores.length){
+    el.innerHTML='<p style="text-align:center;font-size:10px;color:#888;margin:20px 0">NO SCORES YET — START BAKING! 🦄🍪</p>';
+    return;
+  }
+  let h='<table class="stbl"><thead><tr><th>#</th><th>NAME</th><th>SCORE</th><th>DATE</th><th></th></tr></thead><tbody>';
+  scores.forEach((s,i)=>{
+    const suffix=i===0?'st':i===1?'nd':i===2?'rd':'th';
+    const m=(i+1)+suffix;
+    h+='<tr><td style="color:#ffd700">'+m+'</td><td>'+s.ini+'</td><td style="color:#00ff88">'+s.pct+'%</td><td>'+s.date+'</td><td>'+(s.daily?'📅':'🎮')+'</td></tr>';
+  });
+  el.innerHTML=h+'</tbody></table>';
+}
+function copyShare(){
+  const txt=document.getElementById('share-text').textContent;
+
+  // 1. Native share sheet (iOS Safari, Android Chrome) — best on mobile
+  if(navigator.share){
+    navigator.share({title:'Unicorn Cookie Bakery',text:txt})
+      .then(()=>toast('Shared! 🦄🍪'))
+      .catch(err=>{
+        // User cancelled is fine — anything else fall through to clipboard
+        if(err.name!=='AbortError') fallbackCopy(txt);
+      });
+    return;
+  }
+
+  // 2. Clipboard API — works on HTTPS in modern browsers
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt)
+      .then(()=>toast('Copied to clipboard! 🦄🍪'))
+      .catch(()=>fallbackCopy(txt));
+    return;
+  }
+
+  // 3. Legacy textarea fallback — works everywhere including HTTP
+  fallbackCopy(txt);
+}
+
+function fallbackCopy(txt){
+  try{
+    const t=document.createElement('textarea');
+    t.value=txt; t.style.position='fixed'; t.style.opacity='0';
+    document.body.appendChild(t); t.focus(); t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+    toast('Copied! Paste anywhere to share 🦄🍪');
+  } catch(e){
+    toast('Long-press the text above to copy! 🦄🍪');
+  }
+}
+
+function openScreen(id){
+  const el=document.getElementById('screen-'+id);
+  // Toggle: if already open, close it
+  if(el.classList.contains('open')){
+    el.classList.remove('open');
+    return;
+  }
+  if(id==='scores') renderScores();
+  // Close any other open screens first
+  document.querySelectorAll('.screen.open').forEach(s=>s.classList.remove('open'));
+  const nb=document.getElementById('navbar');
+  const h=nb?nb.offsetHeight:50;
+  el.style.paddingTop=(h+4)+'px';
+  el.classList.add('open');
+}
+function closeScreen(id){ document.getElementById('screen-'+id).classList.remove('open'); }
+
+function hideGobar(){
+  document.getElementById('gobar').style.display='none';
+  document.getElementById('infobar').style.display='flex';
+}
+function showDetail(){ document.getElementById('go-detail').style.display='block'; }
+function hideDetail(){ document.getElementById('go-detail').style.display='none'; }
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  setTimeout(()=>t.style.display='none',2500);
+}
+
+window.addEventListener('resize',()=>{
+  const nb=document.getElementById('navbar');
+  const h=nb?nb.offsetHeight:50;
+  document.getElementById('app').style.top=h+'px';
+  document.querySelectorAll('.screen').forEach(el=>{ if(el.classList.contains('open')) el.style.paddingTop=(h+4)+'px'; });
+  layout(); if(active) render();
+});
+window.addEventListener('orientationchange',()=>setTimeout(()=>{ pickGrid(); layout(); if(active) render(); },350));
+window.addEventListener('load',()=>{
+  pickGrid();
+  // Push app and screens below the fixed navbar
+  const nb=document.getElementById('navbar');
+  const h=nb.offsetHeight;
+  document.getElementById('app').style.top=h+'px';
+  document.querySelectorAll('.screen-inner').forEach(el=>el.style.paddingTop='8px');
+  document.querySelectorAll('.screen').forEach(el=>el.style.paddingTop=(h+4)+'px');
+  layout();
+});
+</script>
+</body>
+</html>
