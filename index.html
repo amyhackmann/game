@@ -1082,11 +1082,8 @@ async function saveScore(){
 }
 
 function clearScores(){
-  // Local clear only — removes from in-memory cache (no server delete endpoint needed)
-  if(!confirm('Clear displayed scores? (This only affects your view; global scores remain.)')) return;
   scores=[];
   renderScores();
-  toast('Display cleared!');
 }
 
 function switchScoresTab(tab){
