@@ -562,7 +562,7 @@ html, body {
       <p>&#x1F6AB; Fall off the edge = GAME OVER</p>
       <p>&#x1F6D1; Run out of valid moves = GAME OVER</p>
       <p>&#x1F4C5; Daily = same grid for everyone, new one each day!</p>
-      <p id="scoring-text">&#x1F3C6; Score = % of cookies baked</p>
+      <p id="scoring-text">&#x1F3C6; Score = Cookies Baked &divide; Total Grid</p>
     </div>
     <div style="text-align:center;margin-top:10px">
       <button class="overlay-btn" onclick="closePopup('howto')">&#x2715; CLOSE</button>
@@ -733,7 +733,7 @@ function startGame(daily){
   const mEl=document.getElementById('mission-text');
   if(mEl) mEl.textContent='You are a unicorn on a mission to bake as many as '+TOTAL+' cookies! Avoid the '+MONSTERS+' hidden Cookie Monsters across the '+COLS+'x'+ROWS+' grid!';
   const sEl=document.getElementById('scoring-text');
-  if(sEl) sEl.textContent='Score = % of '+TOTAL+' cookies baked ('+COLS+'x'+ROWS+' grid)';
+  if(sEl) sEl.textContent='🏆 Score = Cookies Baked ÷ Total Grid';
 
   const maxN = daily ? 7 : 9; // Daily uses 1-7, Free Play uses 1-9
   const rand=daily?rng(todaySeed()):rng(Math.floor(Math.random()*999999));
