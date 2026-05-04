@@ -67,6 +67,93 @@ html, body {
   width: auto;
 }
 
+/* V2: Unified popup system */
+.popup {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88); z-index: 200;
+  align-items: flex-start; justify-content: center;
+  padding: 12px; overflow-y: auto;
+}
+.popup.open { display: flex; }
+.popup-box {
+  background: #1a0a2e; border: 3px solid #ffd700;
+  padding: 22px 18px; max-width: 380px; width: 100%;
+  position: relative; margin: auto;
+}
+/* Scores popup — pinned to top, uses all available height */
+#popup-scores { align-items: flex-start; padding: 4px; }
+#popup-scores .popup-box {
+  margin: 0 auto;
+  padding: 12px 10px 10px;
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 8px);
+}
+#popup-scores .popup-box h2 { margin-bottom: 8px; }
+#popup-scores .scores-tabs { margin-bottom: 6px; }
+#scores-content { flex: 1; overflow-y: auto; min-height: 0; }
+.popup-box h2 { font-size: 10px; color: #ffd700; margin-bottom: 14px; text-align: center; }
+.popup-box p { font-size: 9px; color: #ddd; line-height: 2.2; margin-bottom: 8px; }
+.popup-box b { color: #ffd700; }
+.popup-x {
+  position: absolute; top: 8px; right: 8px;
+  font-family: 'Press Start 2P', monospace; font-size: 9px;
+  padding: 4px 8px; cursor: pointer; color: #ffd700;
+  background: none; border: 1px solid #ffd700;
+}
+.popup-x:active { background: #ffd700; color: #1a0a2e; }
+
+/* V2: Show monsters active state */
+.nav-btn.mon-active { background: #ffcc88; color: #880000; }
+
+/* V2: Start instructions overlay on grid */
+#start-instructions {
+  position: absolute; inset: 0;
+  background: rgba(13,6,40,0.93);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; padding: 16px; z-index: 5;
+  pointer-events: none;
+}
+#start-instructions .si-icon { font-size: 32px; }
+#start-instructions .si-line {
+  font-size: 9px; color: #ffd700; text-align: center; line-height: 2;
+}
+#start-instructions .si-line.small { font-size: 8px; color: #ccc; }
+
+/* V2: Landscape warning overlay */
+#landscape-warning {
+  display: none; position: fixed; inset: 0;
+  background: rgba(13,6,40,0.97); z-index: 300;
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 24px; text-align: center;
+}
+#landscape-warning.show { display: flex; }
+#landscape-warning .lw-icon { font-size: 48px; }
+#landscape-warning .lw-title { font-size: 11px; color: #ffd700; line-height: 2; }
+#landscape-warning .lw-msg { font-size: 9px; color: #ccc; line-height: 2; }
+
+/* V2: About popup */
+#about-popup {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88); z-index: 200;
+  align-items: center; justify-content: center; padding: 20px;
+}
+#about-popup.open { display: flex; }
+#about-box {
+  background: #1a0a2e; border: 3px solid #ffd700;
+  padding: 22px 20px; max-width: 340px; width: 100%;
+  position: relative;
+}
+#about-box h2 { font-size: 10px; color: #ffd700; margin-bottom: 16px; text-align: center; }
+#about-box p { font-size: 10px; color: #ddd; line-height: 2.4; margin-bottom: 12px; }
+#about-box a { color: #ff85c8; text-decoration: none; }
+#about-close {
+  position: absolute; top: 8px; right: 8px;
+  font-family: 'Press Start 2P', monospace; font-size: 9px;
+  padding: 4px 8px; cursor: pointer; color: #ffd700;
+  background: none; border: 1px solid #ffd700;
+}
+
 /* 3D raised nav buttons */
 .nav-btn {
   font-family: 'Press Start 2P', monospace;
@@ -256,12 +343,30 @@ html, body {
   display: flex; gap: 8px; justify-content: center;
   align-items: center; flex-wrap: wrap; margin: 8px 0;
 }
+/* Arcade initials entry */
 .init-row span { font-size: 7px; color: #aaa; }
+#initials-display {
+  display: flex; gap: 4px; align-items: center; cursor: text;
+}
+.ini-char {
+  font-family: 'Press Start 2P', monospace; font-size: 18px;
+  width: 32px; height: 42px; background: #0a0020;
+  border: 2px solid #ffd700; color: #ffd700;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; flex-direction: column;
+}
+.ini-char.active { border-color: #00ff88; color: #00ff88; }
+.ini-cursor {
+  display: none; position: absolute; bottom: 3px;
+  left: 4px; right: 4px; height: 2px; background: #00ff88;
+  animation: blink-cur 0.7s step-start infinite;
+}
+.ini-char.active .ini-cursor { display: block; }
+@keyframes blink-cur { 0%,100%{opacity:1} 50%{opacity:0} }
+/* Hidden real input — captures keyboard on mobile */
 #initials {
-  font-family: 'Press Start 2P', monospace; font-size: 14px;
-  padding: 6px; background: #0a0020; border: 2px solid #ffd700;
-  color: #ffd700; text-align: center; width: 76px;
-  text-transform: uppercase; height: 42px;
+  position: absolute; opacity: 0; width: 1px; height: 1px;
+  pointer-events: none; font-size: 16px; /* prevent iOS zoom */
 }
 .share-box {
   background: #061206; border: 1px solid #00ff88;
@@ -293,6 +398,13 @@ html, body {
 .stbl th { color: #ffd700; border-bottom: 1px solid #ffd700; padding: 3px 3px; text-align: left; font-size: 9px; }
 .stbl td { color: #ddd; padding: 2px 3px; border-bottom: 0.5px solid #2d1b69; font-size: 9px; }
 .stbl tr:nth-child(even) td { background: #1f0f3d; }
+/* Scores tabs */
+.scores-tabs { display:flex; gap:4px; margin-bottom:10px; }
+.scores-tab {
+  flex:1; padding:5px 4px; font-family:'Press Start 2P',monospace; font-size:8px;
+  background:none; border:1px solid #4a2f8a; color:#888; cursor:pointer;
+}
+.scores-tab.active { border-color:#ffd700; color:#ffd700; background:#0d0628; }
 
 /* Shared overlay close button */
 .overlay-btn {
@@ -320,6 +432,8 @@ html, body {
   display: none; z-index: 99; white-space: nowrap;
 }
 
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
 #credit { font-size: 8px; color: #ffffff; text-align: center; padding: 3px; flex-shrink: 0; }
 </style>
 </head>
@@ -332,8 +446,9 @@ html, body {
   <div id="navbar-btns">
     <button class="nav-btn" onclick="startGame(false)"><span style="font-size:11px">&#x1F3AE;</span> NEW</button>
     <button class="nav-btn" onclick="startGame(true)"><span style="font-size:11px">&#x1F4C5;</span> DAILY</button>
-    <button class="nav-btn" onclick="openScreen('howto')"><span style="font-size:11px">&#x2753;</span> HOW</button>
-    <button class="nav-btn" onclick="openScreen('scores')"><span style="font-size:11px">&#x1F3C6;</span> SCORES</button>
+    <button class="nav-btn" id="btn-show-monsters" onclick="toggleMonsters()"><span style="font-size:11px">&#x1F441;</span> SHOW&#x1F47E;</button>
+    <button class="nav-btn" onclick="openPopup('howto')"><span style="font-size:11px">&#x2753;</span> HOW</button>
+    <button class="nav-btn" onclick="fetchScores().then(renderScores);openPopup('scores')"><span style="font-size:11px">&#x1F3C6;</span> SCORES</button>
   </div>
 </div>
 
@@ -368,11 +483,11 @@ html, body {
     </div>
 
     <!-- GRID — takes all remaining space -->
-    <div id="grid-wrap"><div id="grid"></div></div>
+    <div id="grid-wrap" style="position:relative;"><div id="grid"></div></div>
 
   </div>
 
-  <div id="credit"><a href="mailto:amy@amyhackmannconsulting.com" style="color:#ffffff;text-decoration:none">amy@amyhackmannconsulting.com</a> | Unicorn Cookie Bakery | &#xA9; AMY HACKMANN 2026</div>
+  <div id="credit" onclick="openAbout()" style="cursor:pointer">Unicorn Cookie Bakery | &#xA9; AMY HACKMANN 2026</div>
 </div>
 
 <!-- Slide-up save/share -->
@@ -381,66 +496,143 @@ html, body {
   <span id="go-flavor"></span>
   <div class="init-row">
     <span>INITIALS:</span>
-    <input id="initials" maxlength="3" value="AAA"
-      autocomplete="off" autocorrect="off" autocapitalize="characters"/>
+    <div id="initials-display" onclick="focusInitials()">
+      <div class="ini-char active" id="ic0">?<div class="ini-cursor"></div></div>
+      <div class="ini-char"        id="ic1">?<div class="ini-cursor"></div></div>
+      <div class="ini-char"        id="ic2">?<div class="ini-cursor"></div></div>
+    </div>
+    <input id="initials" maxlength="10" value=""
+      autocomplete="off" autocorrect="off" autocapitalize="characters"
+      inputmode="text"
+      onkeydown="onInitialsKeydown(event)"
+      oninput="onInitialsInput(this)" onblur="onInitialsBlur()"/>
     <button class="overlay-btn" onclick="saveScore()">SAVE &#x1F4BE;</button>
   </div>
   <div id="share-area" style="display:none">
     <div class="share-box" id="share-text"></div>
-    <button class="overlay-btn" onclick="copyShare()"><span style="font-size:16px">&#x1F4CB;</span> COPY &amp; SHARE</button>
   </div>
   <div class="go-btns">
-
-    <button class="overlay-btn" onclick="hideDetail();hideGobar();openScreen('scores')"><span style="font-size:16px">&#x1F3C6;</span> SCORES</button>
+    <button class="overlay-btn" onclick="shareGame(true)"><span style="font-size:13px">&#x1F4E4;</span> SHARE</button>
+    <button class="overlay-btn" onclick="hideDetail();hideGobar();fetchScores().then(renderScores);openPopup('scores')"><span style="font-size:16px">&#x1F3C6;</span> SCORES</button>
     <button class="overlay-btn" onclick="hideDetail();hideGobar()"><span style="font-size:13px">&#x1F3E0;</span> MENU</button>
   </div>
 </div>
 
-<!-- HOW TO PLAY -->
-<div class="screen" id="screen-howto">
-  <div class="screen-inner">
-  <h2>HOW TO PLAY</h2>
-  <div class="sec">
-    <p>&#x1F984; Bake as many cookies as possible!</p>
-    <p>&#x1F47E; Avoid the 5 hidden Cookie Monsters!</p>
-  </div>
-  <div class="sec">
-    <p>&#x25A1; Tap a yellow cell next to your unicorn</p>
-    <p>&#x1F522; The number you hit = cookies baked in that row</p>
-    <p>&#x1F984; Your unicorn moves to end of the row</p>
-    <p>&#x1F501; Keep chaining to bake as many as you can!</p>
-  </div>
-  <div class="sec">
-    <p>&#x1F6D1; GAME OVER if you...</p>
-    <p>&#x1F47E; Hit a Cookie Monster</p>
-    <p>&#x1F36A; Run into your own Cookie trail</p>
-    <p>&#x1F6AB; Fall off the edge</p>
-  </div>
-  <div class="sec">
-    <p>&#x1F4C5; Daily = Challenge your friends to the same grid (new one daily!)</p>
-    <p id="scoring-text">&#x1F3C6; Score = Top 25 Scores for the Game</p>
-  </div>
 
+<!-- START INSTRUCTIONS POPUP -->
+<div class="popup" id="popup-start">
+  <div class="popup-box">
+    <button class="popup-x" onclick="closePopup('start')">&#x2715;</button>
+    <h2>&#x1F984; HOW TO PLAY</h2>
+    <div class="sec">
+      <p>You are a &#x1F984; Unicorn trying to turn the whole Grid into &#x1F36A; Cookies!</p>
+      <p>&#x25A1; Tap a <b>yellow number</b> next to your Unicorn to bake that many Cookies in a row.</p>
+      <p>Your &#x1F984; moves to the <b>end of the row</b>. Keep chaining!</p>
+      <p>&#x1F6D1; GAME OVER if your path hits a &#x1F47E; Monster, your own &#x1F36A; trail, or the edge!</p>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px">
+      <button class="overlay-btn" onclick="closePopup('start');startGame(false)">&#x1F3AE; NEW GAME</button>
+      <button class="overlay-btn" onclick="closePopup('start');startGame(true)">&#x1F4C5; DAILY</button>
+    </div>
   </div>
 </div>
 
-<!-- HIGH SCORES -->
-<div class="screen" id="screen-scores">
-  <div class="screen-inner">
-  <h2>&#x1F3C6; TOP 25 HIGH SCORES!</h2>
-  <div id="scores-content"></div>
+<!-- HOW TO PLAY POPUP -->
+<div class="popup" id="popup-howto">
+  <div class="popup-box">
+    <button class="popup-x" onclick="closePopup('howto')">&#x2715;</button>
+    <h2>&#x2753; HOW TO PLAY</h2>
+    <div class="sec">
+      <h3>&#x1F4CB; Summary</h3>
+      <p>You are a &#x1F984; Unicorn trying to turn the whole Grid into &#x1F36A; Cookies!</p>
+      <p>&#x25A1; Tap a <b>yellow number</b> next to your Unicorn to bake that many Cookies in a row.</p>
+      <p>Your &#x1F984; moves to the <b>end of the row</b>. Keep chaining!</p>
+      <p>&#x1F6D1; GAME OVER if your path hits a &#x1F47E; Monster, your own &#x1F36A; trail, or the edge!</p>
+    </div>
+    <div class="sec">
+      <h3>&#x1F4D6; Details</h3>
+      <p>&#x1F984; Bake as many cookies as possible!</p>
+      <p>&#x1F47E; Avoid the hidden Cookie Monsters!</p>
+      <p>&#x25A1; Tap a yellow cell next to your unicorn</p>
+      <p>&#x1F522; The number = cookies baked in that direction</p>
+      <p>&#x1F984; Your unicorn moves to the end of the row</p>
+      <p>&#x1F501; Keep chaining to bake as many as you can!</p>
+      <p>&#x1F47E; Hit a Cookie Monster = GAME OVER</p>
+      <p>&#x1F36A; Run into your own Cookie trail = GAME OVER</p>
+      <p>&#x1F6AB; Fall off the edge = GAME OVER</p>
+      <p>&#x1F6D1; Run out of valid moves = GAME OVER</p>
+      <p>&#x1F4C5; Daily = same grid for everyone, new one each day!</p>
+      <p id="scoring-text">&#x1F3C6; Score = % of cookies baked</p>
+    </div>
+    <div style="text-align:center;margin-top:10px">
+      <button class="overlay-btn" onclick="closePopup('howto')">&#x2715; CLOSE</button>
+    </div>
+  </div>
+</div>
 
+<!-- SCORES POPUP -->
+<div class="popup" id="popup-scores">
+  <div class="popup-box">
+    <button class="popup-x" onclick="closePopup('scores')">&#x2715;</button>
+    <h2>&#x1F3C6; HIGH SCORES!</h2>
+    <div class="scores-tabs">
+      <button class="scores-tab active" id="tab-all"   onclick="switchScoresTab('all')">&#x1F3AE; ALL</button>
+      <button class="scores-tab"        id="tab-daily" onclick="switchScoresTab('daily')">&#x1F4C5; DAILY</button>
+    </div>
+    <div id="scores-content"></div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+      <button class="overlay-btn" onclick="closePopup('scores')">&#x2715; CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT POPUP -->
+<div class="popup" id="popup-about">
+  <div class="popup-box">
+    <button class="popup-x" onclick="closePopup('about')">&#x2715;</button>
+    <h2>&#x2728; ABOUT &#x2728;</h2>
+    <p>Unicorns represent rare moments of feeling seen.</p>
+    <p>Cookies represent small acts of care.</p>
+    <p>This game is a thank you to everyone who has ever shown up and made me feel seen.</p>
+    <p style="font-size:8px;color:#888;margin-top:14px;line-height:2">
+      Comments / Bugs / Suggestions:<br>
+      <button onclick="window.location.href='mailto:Amy@AmyHackmannConsulting.com';" style="font-family:'Press Start 2P',monospace;font-size:8px;color:#ff85c8;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;">Amy@AmyHackmannConsulting.com</button>
+    </p>
+    <div style="text-align:center;margin-top:16px">
+      <button class="overlay-btn" onclick="shareGame(false)">&#x1F4E4; SHARE GAME</button>
+    </div>
+    <p style="font-size:7px;color:#555;margin-top:12px;text-align:center">&#xA9; Amy Hackmann 2026</p>
+  </div>
+</div>
+
+<!-- LANDSCAPE WARNING -->
+<div id="landscape-warning" onclick="hideLandscapeWarning()">
+  <div class="lw-icon">&#x1F4F1;&#x27A1;&#x1F4F1;</div>
+  <div class="lw-title">ROTATE YOUR SCREEN</div>
+  <div class="lw-msg">
+    Daily Challenge is optimised<br>for vertical view &#x1F984;<br><br>
+    Rotate to portrait to play!<br><br>
+    <span style="color:#ffd700;font-size:8px">TAP TO DISMISS</span>
   </div>
 </div>
 
 <div id="toast"></div>
 
+
 <script>
-const MONSTERS=5;
-let COLS=12, ROWS=18, TOTAL=211;
+// ── Universal leaderboard Worker URL ──────────────────────────────────────
+// Replace with your actual Worker URL after deploying worker.js
+const WORKER_URL = 'https://game-scores-worker.amyhackmann.workers.dev';
+
+let COLS=12, ROWS=18;
+let MONSTERS=Math.floor(COLS*ROWS*0.025); // V2: dynamic 2.5% of grid
+let TOTAL=(COLS*ROWS)-MONSTERS;
 let grid=[], pos={x:0,y:0}, baked=0, active=false, isDaily=false;
+// scores = in-memory cache; pre-seed from localStorage so local saves show immediately
 let scores=JSON.parse(localStorage.getItem('mcb_v7')||'[]');
+let activeScoresTab='all'; // 'all' or 'daily'
 let SZ=20;
+let showMonsters=false; // V2: show/hide monsters toggle
 
 function pickGrid(){
   const W=window.innerWidth, H=window.innerHeight, land=W>H;
@@ -479,11 +671,23 @@ function pickGrid(){
     ROWS = Math.floor(gridH / 28);
   }
 
-  // Clamp to sensible game bounds
-  COLS = Math.max(8,  Math.min(COLS, 30));
-  ROWS = Math.max(8,  Math.min(ROWS, 30));
+  // Clamp — minimum 12x18 so cells are always finger-tappable
+  COLS = Math.max(12, Math.min(COLS, 30));
+  ROWS = Math.max(18, Math.min(ROWS, 30));
+
+  // V2: dynamic monster count = 2% of grid rounded down, max 10
+  MONSTERS = Math.min(Math.floor(COLS * ROWS * 0.02), 10);
 
   // Total playable cells minus monsters
+  TOTAL = (COLS * ROWS) - MONSTERS;
+}
+
+// V2: Daily always uses a fixed 12x18 grid so it's identical on every device
+// Numbers 1-7 (not 1-9), monsters = min(ceil(216*0.025),5) = 5
+function pickDailyGrid(){
+  COLS = 12;
+  ROWS = 18;
+  MONSTERS = Math.min(Math.ceil(COLS * ROWS * 0.025), 5); // ceil(5.4) capped at 5
   TOTAL = (COLS * ROWS) - MONSTERS;
 }
 
@@ -521,20 +725,22 @@ function dateStr(){
 
 function startGame(daily){
   isDaily=daily; baked=0; active=true;
-  // Close any open overlay screens first
-  document.querySelectorAll('.screen.open').forEach(s=>s.classList.remove('open'));
+  // V2: close all popups when game starts
+  document.querySelectorAll('.popup.open').forEach(p=>p.classList.remove('open'));
   hideGobar(); hideDetail();
-  pickGrid();
+  // V2: Daily = fixed 12x18 universal grid; Free = dynamic to screen size
+  if(daily){ pickDailyGrid(); } else { pickGrid(); }
   const mEl=document.getElementById('mission-text');
   if(mEl) mEl.textContent='You are a unicorn on a mission to bake as many as '+TOTAL+' cookies! Avoid the '+MONSTERS+' hidden Cookie Monsters across the '+COLS+'x'+ROWS+' grid!';
   const sEl=document.getElementById('scoring-text');
   if(sEl) sEl.textContent='Score = % of '+TOTAL+' cookies baked ('+COLS+'x'+ROWS+' grid)';
 
+  const maxN = daily ? 7 : 9; // Daily uses 1-7, Free Play uses 1-9
   const rand=daily?rng(todaySeed()):rng(Math.floor(Math.random()*999999));
   grid=[];
   for(let y=0;y<ROWS;y++){
     grid[y]=[];
-    for(let x=0;x<COLS;x++) grid[y][x]={n:Math.floor(rand()*9)+1,s:'h',m:false};
+    for(let x=0;x<COLS;x++) grid[y][x]={n:Math.floor(rand()*maxN)+1,s:'h',m:false};
   }
   let placed=0;
   while(placed<MONSTERS){
@@ -545,6 +751,7 @@ function startGame(daily){
   while(grid[py][px].m){px=Math.floor(rand()*COLS);py=Math.floor(rand()*ROWS);}
   pos={x:px,y:py}; grid[py][px].s='p';
   layout(); render(); setStatus();
+  if(daily) checkOrientation(); // V2: warn if Daily started in landscape
 }
 
 function render(){
@@ -569,7 +776,10 @@ function render(){
       el.classList.add('revealed'); el.textContent=c.n; el.style.fontSize=nfs;
     } else {
       el.textContent=c.n; el.style.fontSize=nfs;
-      if(isAdj){
+      // V2: show monster emoji if toggle is on
+      if(c.m && showMonsters){
+        el.classList.add('monster'); el.textContent='👾'; el.style.fontSize=efs;
+      } else if(isAdj){
         el.classList.add('tap');
         el.addEventListener('touchend',e=>{e.preventDefault();tap(x,y);},{passive:false});
         el.onclick=()=>tap(x,y);
@@ -702,14 +912,25 @@ function endGame(reason){
   document.getElementById('go-flavor').textContent=
     reason==='monster'?MM[band]:reason==='edge'?EM[band]:TM[band];
 
+  const url='https://game.amyhackmannconsulting.com/';
+  const pctShare=((baked/TOTAL)*100).toFixed(1);
   if(isDaily){
-    document.getElementById('share-area').style.display='block';
     document.getElementById('share-text').textContent=
-      '🦄 Unicorn Cookie Bakery\nDaily Challenge — '+dateStr()+
-      '\nI baked '+baked+' of '+TOTAL+' cookies ('+pct+'%)\n#UnicornCookieBakery #BakeThemAll';
+      '🦄 Unicorn Cookie Bakery 🍪\n'+
+      'Daily Challenge — '+dateStr()+'\n'+
+      'I baked '+baked+' of '+TOTAL+' cookies ('+pctShare+'%) 🍪✨\n\n'+
+      'Can you beat me? 🦄\n\n'+
+      '🕹️ Play now → '+url+'\n'+
+      '#UnicornCookieBakery #BakeThemAll 🦄🍪';
   } else {
-    document.getElementById('share-area').style.display='none';
+    document.getElementById('share-text').textContent=
+      '🦄 Unicorn Cookie Bakery 🍪\n'+
+      'I baked '+baked+' of '+TOTAL+' cookies ('+pctShare+'%) 🍪✨\n'+
+      'Can you beat me? 🦄\n\n'+
+      '🕹️ Play now → '+url+'\n'+
+      '#UnicornCookieBakery #BakeThemAll 🦄🍪';
   }
+  document.getElementById('share-area').style.display='block';
 
   // Hide infobar, show gobar
   document.getElementById('infobar').style.display='none';
@@ -723,34 +944,195 @@ function setStatus(msg){
     msg||(baked+' out of '+TOTAL+'  cookies baked! ('+pct+'%)'+(isDaily?' 📅':''));
 }
 
-function saveScore(){
-  const ini=(document.getElementById('initials').value||'AAA').toUpperCase().slice(0,3);
+// ── Arcade initials input ─────────────────────────────────────────────────
+const INI_DEFAULT = '???';
+let iniChars = ['?','?','?'];  // source of truth for display
+let iniPos   = 0;              // active box index (0-2)
+
+function focusInitials(){
+  const inp = document.getElementById('initials');
+  inp.value = '';  // always clear so Android IME starts blank
+  inp.focus();
+  setIniCursor(0);
+}
+
+function setIniCursor(pos){
+  iniPos = Math.max(0, Math.min(2, pos));
+  for(let i=0;i<3;i++)
+    document.getElementById('ic'+i).classList.toggle('active', i===iniPos);
+}
+
+function syncIniDisplay(){
+  for(let i=0;i<3;i++)
+    document.getElementById('ic'+i).childNodes[0].textContent = iniChars[i];
+}
+
+function onInitialsInput(inp){
+  // Grab whatever the IME put in, strip to clean chars
+  const raw = inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  inp.value = '';  // immediately clear so next event starts fresh
+
+  // Feed each new char into our own cursor-tracked array
+  for(let i=0; i<raw.length && iniPos<=2; i++){
+    iniChars[iniPos] = raw[i];
+    if(iniPos < 2) iniPos++;
+  }
+  syncIniDisplay();
+  setIniCursor(iniPos);
+}
+
+function onInitialsKeydown(e){
+  // Handle backspace manually so user can correct mistakes
+  if(e.key === 'Backspace' || e.keyCode === 8){
+    e.preventDefault();
+    // If current box already has a real char, clear it; else go back one
+    if(iniChars[iniPos] !== '?'){
+      iniChars[iniPos] = '?';
+    } else if(iniPos > 0){
+      iniPos--;
+      iniChars[iniPos] = '?';
+    }
+    syncIniDisplay();
+    setIniCursor(iniPos);
+  }
+}
+
+function onInitialsBlur(){
+  for(let i=0;i<3;i++) document.getElementById('ic'+i).classList.remove('active');
+}
+
+function resetInitialsDisplay(){
+  iniChars = ['?','?','?'];
+  iniPos   = 0;
+  syncIniDisplay();
+  const inp = document.getElementById('initials');
+  inp.value = '';
+  // Restore active class to box 0
+  for(let i=0;i<3;i++) document.getElementById('ic'+i).classList.remove('active');
+  document.getElementById('ic0').classList.add('active');
+}
+
+function getInitialsValue(){
+  // Build string; treat ? as blank — fallback to ??? if all blank
+  const v = iniChars.join('').replace(/\?/g,'').trim();
+  return v.length ? iniChars.join('') : '???';
+}
+
+
+const WORKER_READY = !WORKER_URL.includes('REPLACE_WITH');
+
+async function fetchScores(){
+  if(!WORKER_READY) return; // Worker not yet deployed — skip silently
+  try{
+    const r=await fetch(WORKER_URL+'/scores');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    scores=data.scores||[];
+  } catch(e){
+    // Network error — silently keep whatever is in memory
+  }
+}
+
+async function saveScore(){
+  const ini = getInitialsValue();
   const pct=parseFloat(((baked/TOTAL)*100).toFixed(1));
-  scores.push({ini,pct,date:dateStr(),daily:isDaily});
-  scores.sort((a,b)=>b.pct-a.pct);
-  scores=scores.slice(0,25);
-  localStorage.setItem('mcb_v7',JSON.stringify(scores));
-  toast('Score saved! 🦄🍪');
-  hideDetail(); hideGobar(); openScreen('scores');
-}
-function clearScores(){
-  if(!confirm('Clear all high scores?')) return;
-  scores=[]; localStorage.removeItem('mcb_v7');
-  renderScores(); toast('Scores cleared!');
-}
-function renderScores(){
-  const el=document.getElementById('scores-content');
-  if(!scores.length){
-    el.innerHTML='<p style="text-align:center;font-size:10px;color:#888;margin:20px 0">NO SCORES YET — START BAKING! 🦄🍪</p>';
+  const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,ts:Date.now()};
+
+  if(!WORKER_READY){
+    // Worker not deployed yet — save locally so no score is lost
+    scores.push(entry);
+    scores.sort((a,b)=>b.pct-a.pct);
+    scores=scores.slice(0,25);
+    localStorage.setItem('mcb_v7',JSON.stringify(scores));
+    toast('Score saved locally! 🦄🍪');
+    hideDetail(); hideGobar();
+    activeScoresTab = isDaily ? 'daily' : 'all';
+    openPopup('scores'); renderScores();
     return;
   }
-  let h='<table class="stbl"><thead><tr><th>#</th><th>NAME</th><th>SCORE</th><th>DATE</th><th></th></tr></thead><tbody>';
-  scores.forEach((s,i)=>{
+
+  // Optimistic UI — show saving immediately
+  const saveBtn=document.querySelector('#go-detail .overlay-btn');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='SAVING…'; }
+
+  try{
+    const r=await fetch(WORKER_URL+'/scores',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(entry)
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    scores=data.scores||[];
+    toast('Score saved! 🦄🍪');
+  } catch(e){
+    // Network blip — save locally as fallback so the score isn't lost
+    scores.push(entry);
+    scores.sort((a,b)=>b.pct-a.pct);
+    scores=scores.slice(0,25);
+    localStorage.setItem('mcb_v7',JSON.stringify(scores));
+    toast('Saved locally (offline) 🦄🍪');
+  } finally{
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.innerHTML='SAVE &#x1F4BE;'; }
+  }
+
+  hideDetail(); hideGobar();
+  activeScoresTab = isDaily ? 'daily' : 'all';
+  openPopup('scores'); renderScores();
+}
+
+function clearScores(){
+  // Local clear only — removes from in-memory cache (no server delete endpoint needed)
+  if(!confirm('Clear displayed scores? (This only affects your view; global scores remain.)')) return;
+  scores=[];
+  renderScores();
+  toast('Display cleared!');
+}
+
+function switchScoresTab(tab){
+  activeScoresTab=tab;
+  document.getElementById('tab-all').classList.toggle('active', tab==='all');
+  document.getElementById('tab-daily').classList.toggle('active', tab==='daily');
+  renderScores();
+}
+
+function renderScores(){
+  const el=document.getElementById('scores-content');
+  const list = activeScoresTab==='daily'
+    ? scores.filter(s=>s.daily)
+    : scores;
+  if(!list.length){
+    const msg = activeScoresTab==='daily'
+      ? 'NO DAILY SCORES YET — HIT 📅 DAILY! 🦄🍪'
+      : 'NO SCORES YET — START BAKING! 🦄🍪';
+    el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">'+msg+'</p>';
+    return;
+  }
+  // ALL tab shows type icon; DAILY tab omits it (redundant)
+  const showType = activeScoresTab==='all';
+  let h='<table class="stbl"><thead><tr>'
+    +(showType?'<th></th>':'')
+    +'<th>#</th><th>NAME</th><th>%</th><th>🍪/TOTAL</th><th>DATE</th>'
+    +'</tr></thead><tbody>';
+  list.slice(0,25).forEach((s,i)=>{
     const suffix=i===0?'st':i===1?'nd':i===2?'rd':'th';
-    const m=(i+1)+suffix;
-    h+='<tr><td style="color:#ffd700">'+m+'</td><td>'+s.ini+'</td><td style="color:#00ff88">'+s.pct+'%</td><td>'+s.date+'</td><td>'+(s.daily?'📅':'🎮')+'</td></tr>';
+    const icon=s.daily?'📅':'🎮';
+    const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
+    h+='<tr>'
+      +(showType?'<td>'+icon+'</td>':'')
+      +'<td style="color:#ffd700">'+(i+1)+suffix+'</td>'
+      +'<td>'+s.ini+'</td>'
+      +'<td style="color:#00ff88">'+s.pct+'%</td>'
+      +'<td style="color:#aaa">'+cookies+'</td>'
+      +'<td>'+s.date+'</td>'
+      +'</tr>';
   });
   el.innerHTML=h+'</tbody></table>';
+}
+
+// Pre-fetch scores on load so the leaderboard opens instantly
+async function loadScoresInBackground(){
+  await fetchScores();
 }
 function copyShare(){
   const txt=document.getElementById('share-text').textContent;
@@ -798,7 +1180,7 @@ function openScreen(id){
     el.classList.remove('open');
     return;
   }
-  if(id==='scores') renderScores();
+  if(id==='scores'){ renderScores(); fetchScores().then(renderScores); }
   // Close any other open screens first
   document.querySelectorAll('.screen.open').forEach(s=>s.classList.remove('open'));
   const nb=document.getElementById('navbar');
@@ -812,7 +1194,12 @@ function hideGobar(){
   document.getElementById('gobar').style.display='none';
   document.getElementById('infobar').style.display='flex';
 }
-function showDetail(){ document.getElementById('go-detail').style.display='block'; }
+function showDetail(){
+  document.getElementById('go-detail').style.display='block';
+  resetInitialsDisplay();
+  // Small delay so the panel is visible before we focus (avoids iOS scroll jump)
+  setTimeout(focusInitials, 120);
+}
 function hideDetail(){ document.getElementById('go-detail').style.display='none'; }
 
 function toast(msg){
@@ -821,23 +1208,133 @@ function toast(msg){
   setTimeout(()=>t.style.display='none',2500);
 }
 
+// V2: toggle monster visibility
+function toggleMonsters(){
+  showMonsters=!showMonsters;
+  const btn=document.getElementById('btn-show-monsters');
+  if(btn){
+    btn.innerHTML=showMonsters
+      ?'<span style="font-size:11px">&#x1F441;</span> HIDE&#x1F47E;'
+      :'<span style="font-size:11px">&#x1F441;</span> SHOW&#x1F47E;';
+    btn.classList.toggle('mon-active',showMonsters);
+  }
+  if(active) render();
+}
+
+// ── UNIFIED POPUP SYSTEM ─────────────────────────────────
+function openPopup(name){
+  document.getElementById('popup-'+name).classList.add('open');
+}
+function closePopup(name){
+  document.getElementById('popup-'+name).classList.remove('open');
+}
+function openAbout(){ openPopup('about'); }
+function closeAbout(){ closePopup('about'); }
+
+// Legacy openScreen/closeScreen mapped to popups
+function openScreen(name){
+  if(name==='howto') openPopup('howto');
+  else if(name==='scores'){ fetchScores().then(()=>{ renderScores(); openPopup('scores'); }); return; }
+}
+function closeScreen(name){ closePopup(name==='howto'?'howto':'scores'); }
+
+// Share game
+function shareGame(withStats){
+  const url='https://game.amyhackmannconsulting.com/';
+  let title, text;
+
+  if(withStats && baked>0){
+    const pct=((baked/TOTAL)*100).toFixed(1);
+    title='Unicorn Cookie Bakery 🦄🍪';
+    if(isDaily){
+      text=
+        '🦄 Unicorn Cookie Bakery 🍪\n'+
+        'Daily Challenge — '+dateStr()+'\n'+
+        'I baked '+baked+' of '+TOTAL+' cookies ('+pct+'%) 🍪✨\n\n'+
+        'Can you beat me? 🦄\n\n'+
+        '🕹️ Play now → '+url+'\n'+
+        '#UnicornCookieBakery #BakeThemAll 🦄🍪';
+    } else {
+      text=
+        '🦄 Unicorn Cookie Bakery 🍪\n'+
+        'I baked '+baked+' of '+TOTAL+' cookies ('+pct+'%) 🍪✨\n'+
+        'Can you beat me? 🦄\n\n'+
+        '🕹️ Play now → '+url+'\n'+
+        '#UnicornCookieBakery #BakeThemAll 🦄🍪';
+    }
+  } else {
+    // Called from About — generic invite
+    title='Unicorn Cookie Bakery 🦄🍪';
+    text=
+      '🦄 Unicorn Cookie Bakery 🍪\n'+
+      'Bake as many cookies as possible!\n'+
+      'Avoid the hidden Cookie Monsters 👾\n'+
+      'and don\'t fall off the edge! 🌌\n\n'+
+      'Can you bake them ALL? 👑\n\n'+
+      '🕹️ Play now → '+url+'\n'+
+      '#UnicornCookieBakery #BakeThemAll 🦄🍪';
+  }
+
+  // Use native share sheet (popup) on mobile — put everything in text only,
+  // no separate url param so FB Messenger can't duplicate or reorder it
+  if(navigator.share){
+    navigator.share({title, text}).catch(()=>shareFallback(text));
+  } else {
+    shareFallback(text);
+  }
+}
+function shareFallback(text){
+  try{
+    const t=document.createElement('textarea');
+    t.value=text; t.style.cssText='position:fixed;top:0;left:0;opacity:0;';
+    document.body.appendChild(t); t.focus(); t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+    toast('Copied! Paste anywhere to share 🦄🍪');
+  } catch(e){
+    toast('Visit: game.amyhackmannconsulting.com 🦄');
+  }
+}
+
+// V2: Landscape warning for Daily Challenge
+function checkOrientation(){
+  if(!isDaily || !active) { hideLandscapeWarning(); return; }
+  const isLandscape = window.innerWidth > window.innerHeight;
+  if(isLandscape){ showLandscapeWarning(); } else { hideLandscapeWarning(); }
+}
+function showLandscapeWarning(){
+  document.getElementById('landscape-warning').classList.add('show');
+}
+function hideLandscapeWarning(){
+  document.getElementById('landscape-warning').classList.remove('show');
+}
+
 window.addEventListener('resize',()=>{
   const nb=document.getElementById('navbar');
   const h=nb?nb.offsetHeight:50;
   document.getElementById('app').style.top=h+'px';
   document.querySelectorAll('.screen').forEach(el=>{ if(el.classList.contains('open')) el.style.paddingTop=(h+4)+'px'; });
-  layout(); if(active) render();
+  layout();
+  if(active && grid.length) render();
+  checkOrientation();
 });
-window.addEventListener('orientationchange',()=>setTimeout(()=>{ pickGrid(); layout(); if(active) render(); },350));
+window.addEventListener('orientationchange',()=>setTimeout(()=>{
+  // Only re-layout, do NOT call pickGrid() — that would reset COLS/ROWS
+  // and break the existing grid array dimensions
+  layout(); if(active) render(); checkOrientation();
+},350));
 window.addEventListener('load',()=>{
   pickGrid();
-  // Push app and screens below the fixed navbar
   const nb=document.getElementById('navbar');
   const h=nb.offsetHeight;
   document.getElementById('app').style.top=h+'px';
   document.querySelectorAll('.screen-inner').forEach(el=>el.style.paddingTop='8px');
   document.querySelectorAll('.screen').forEach(el=>el.style.paddingTop=(h+4)+'px');
   layout();
+  // V2: show start instructions popup on first load
+  openPopup('start');
+  // Pre-fetch global leaderboard in background
+  loadScoresInBackground();
 });
 </script>
 </body>
