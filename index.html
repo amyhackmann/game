@@ -397,6 +397,7 @@ html, body {
 .stbl { width: 100%; border-collapse: collapse; font-size: 8px; }
 .stbl th { color: #ffd700; border-bottom: 1px solid #ffd700; padding: 3px 2px; text-align: left; font-size: 8px; white-space: nowrap; }
 .stbl td { color: #ddd; padding: 2px 2px; border-bottom: 0.5px solid #2d1b69; font-size: 8px; white-space: nowrap; }
+.stbl td:nth-child(5) { padding: 2px 0px; width: 16px; text-align: center; }
 .stbl tr:nth-child(even) td { background: #1f0f3d; }
 /* Scores tabs */
 .scores-tabs { display:flex; gap:4px; margin-bottom:10px; }
@@ -1147,8 +1148,7 @@ function renderScores(){
     const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
     const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
     const b=getBadge(s.pct, s.badge);
-    // Shorten date: "05 May 2026" → "05 May"
-    const dateShort=s.date?s.date.split(' ').slice(0,2).join(' '):'-';
+    const dateShort=s.date||'-';
     return '<tr>'
       +(showType?'<td>'+typeIcon+'</td>':'')
       +'<td>'+b+'</td>'
@@ -1157,7 +1157,7 @@ function renderScores(){
       +'<td style="color:#00ff88">'+s.pct+'%</td>'
       +(monIcon?'<td>'+monIcon+'</td>':'<td></td>')
       +'<td style="color:#aaa">'+cookies+'</td>'
-      +'<td>'+dateShort+'</td>'
+      +'<td style="font-size:7px">'+dateShort+'</td>'
       +'</tr>';
   }
 
@@ -1187,15 +1187,18 @@ function renderScores(){
     }
     let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
     if(td.scores.length){
-      h+=sectionHeader('📅 '+td.date+' — TOP 10',7);
+      const tdShort=td.date?td.date.split(' ').slice(0,2).join(' '):td.date;
+      h+=sectionHeader('📅 '+tdShort+' — TOP 10',7);
       td.scores.slice(0,10).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     if(p1.scores.length){
-      h+=sectionHeader('📅 '+p1.date+' — TOP 5',7);
+      const p1Short=p1.date?p1.date.split(' ').slice(0,2).join(' '):p1.date;
+      h+=sectionHeader('📅 '+p1Short+' — TOP 5',7);
       p1.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     if(p2.scores.length){
-      h+=sectionHeader('📅 '+p2.date+' — TOP 5',7);
+      const p2Short=p2.date?p2.date.split(' ').slice(0,2).join(' '):p2.date;
+      h+=sectionHeader('📅 '+p2Short+' — TOP 5',7);
       p2.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     el.innerHTML=h+'</tbody></table>';
