@@ -1123,9 +1123,10 @@ function switchScoresTab(tab){
 }
 
 function getBadge(pct){
-  if(pct>=90) return '🥇';
-  if(pct>=70) return '🥈';
-  if(pct>=50) return '🥉';
+  if(pct>=90) return '🦄';
+  if(pct>=80) return '🥇';
+  if(pct>=60) return '🥈';
+  if(pct>=40) return '🥉';
   return '🍪';
 }
 
@@ -1194,29 +1195,28 @@ function renderScores(){
     return;
   }
 
-  // ── HOF tab ──
+  // ── HOF tab — all-time unique personal best ──
   if(activeScoresTab==='hof'){
     if(!hofData.length){
-      el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">HALL OF FAME STARTS NEXT MONDAY! 🦄🏆</p>';
+      el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO HOF YET — KEEP BAKING! 🦄🏆</p>';
       return;
     }
-    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th></tr></thead><tbody>';
-    hofData.forEach(week=>{
-      h+=sectionHeader('🏆 WEEK OF '+week.week,6);
-      week.scores.slice(0,5).forEach((s,i)=>{ 
-        const suffix=i===0?'st':i===1?'nd':i===2?'rd':'th';
-        const b=s.badge||getBadge(s.pct);
-        const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
-        const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
-        h+='<tr>'
-          +'<td>'+b+'</td>'
-          +'<td style="color:#ffd700">'+(i+1)+suffix+'</td>'
-          +'<td>'+s.ini+'</td>'
-          +'<td style="color:#00ff88">'+s.pct+'%</td>'
-          +(monIcon?'<td>'+monIcon+'</td>':'<td></td>')
-          +'<td style="color:#aaa">'+cookies+'</td>'
-          +'</tr>';
-      });
+    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
+    hofData.slice(0,25).forEach((s,i)=>{
+      const suffix=i===0?'st':i===1?'nd':i===2?'rd':'th';
+      const b=s.badge||getBadge(s.pct);
+      const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
+      const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
+      const dateShort=s.date?s.date.split(' ').slice(0,2).join(' '):'-';
+      h+='<tr>'
+        +'<td>'+b+'</td>'
+        +'<td style="color:#ffd700">'+(i+1)+suffix+'</td>'
+        +'<td>'+s.ini+'</td>'
+        +'<td style="color:#00ff88">'+s.pct+'%</td>'
+        +(monIcon?'<td>'+monIcon+'</td>':'<td></td>')
+        +'<td style="color:#aaa">'+cookies+'</td>'
+        +'<td>'+dateShort+'</td>'
+        +'</tr>';
     });
     el.innerHTML=h+'</tbody></table>';
     return;
