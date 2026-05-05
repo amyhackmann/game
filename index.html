@@ -1021,25 +1021,42 @@ function getInitialsValue(){
 
 const WORKER_READY = !WORKER_URL.includes('REPLACE_WITH');
 
+// Daily date helpers — returns "04 May 2026" style strings
+function dateStrOffset(daysAgo){
+  const d=new Date(); d.setDate(d.getDate()-daysAgo);
+  return d.getDate().toString().padStart(2,'0')+' '+
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+
+    d.getFullYear();
+}
+
+let dailyData={
+  today:{date:'',scores:[]},
+  prev1:{date:'',scores:[]},
+  prev2:{date:'',scores:[]}
+};
+
 async function fetchScores(){
-  if(!WORKER_READY) return; // Worker not yet deployed — skip silently
+  if(!WORKER_READY) return;
+  const today=dateStrOffset(0), prev1=dateStrOffset(1), prev2=dateStrOffset(2);
   try{
-    const r=await fetch(WORKER_URL+'/scores');
+    const r=await fetch(WORKER_URL+'/scores?today='+encodeURIComponent(today)
+      +'&prev1='+encodeURIComponent(prev1)
+      +'&prev2='+encodeURIComponent(prev2));
     if(!r.ok) throw new Error('HTTP '+r.status);
     const data=await r.json();
-    scores=data.scores||[];
+    scores=data.all||[];
+    if(data.daily) dailyData=data.daily;
   } catch(e){
-    // Network error — silently keep whatever is in memory
+    // silently keep in-memory data
   }
 }
 
 async function saveScore(){
   const ini = getInitialsValue();
   const pct=parseFloat(((baked/TOTAL)*100).toFixed(1));
-  const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,ts:Date.now()};
+  const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,monsters:showMonsters,ts:Date.now()};
 
   if(!WORKER_READY){
-    // Worker not deployed yet — save locally so no score is lost
     scores.push(entry);
     scores.sort((a,b)=>b.pct-a.pct);
     scores=scores.slice(0,25);
@@ -1070,8 +1087,8 @@ async function saveScore(){
       }
       throw new Error('HTTP '+r.status);
     }
-    const data=await r.json();
-    scores=data.scores||[];
+    // Refetch updated leaderboard
+    await fetchScores();
     toast('Score saved! 🦄🍪');
   } catch(e){
     // Network blip — save locally as fallback so the score isn't lost
@@ -1103,35 +1120,64 @@ function switchScoresTab(tab){
 
 function renderScores(){
   const el=document.getElementById('scores-content');
-  const list = activeScoresTab==='daily'
-    ? scores.filter(s=>s.daily)
-    : scores;
-  if(!list.length){
-    const msg = activeScoresTab==='daily'
-      ? 'NO DAILY SCORES YET — HIT 📅 DAILY! 🦄🍪'
-      : 'NO SCORES YET — START BAKING! 🦄🍪';
-    el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">'+msg+'</p>';
-    return;
-  }
-  // ALL tab shows type icon; DAILY tab omits it (redundant)
-  const showType = activeScoresTab==='all';
-  let h='<table class="stbl"><thead><tr>'
-    +(showType?'<th></th>':'')
-    +'<th>#</th><th>NAME</th><th>%</th><th>🍪/TOTAL</th><th>DATE</th>'
-    +'</tr></thead><tbody>';
-  list.slice(0,25).forEach((s,i)=>{
-    const suffix=i===0?'st':i===1?'nd':i===2?'rd':'th';
-    const icon=s.daily?'📅':'🎮';
+
+  // ── Helper: build a table row ──
+  function row(rank, s, showType){
+    const suffix=rank===1?'st':rank===2?'nd':rank===3?'rd':'th';
+    const typeIcon=s.daily?'📅':'🎮';
+    const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
     const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
-    h+='<tr>'
-      +(showType?'<td>'+icon+'</td>':'')
-      +'<td style="color:#ffd700">'+(i+1)+suffix+'</td>'
+    return '<tr>'
+      +(showType?'<td>'+typeIcon+'</td>':'')
+      +'<td style="color:#ffd700">'+rank+suffix+'</td>'
       +'<td>'+s.ini+'</td>'
       +'<td style="color:#00ff88">'+s.pct+'%</td>'
+      +'<td>'+monIcon+'</td>'
       +'<td style="color:#aaa">'+cookies+'</td>'
       +'<td>'+s.date+'</td>'
       +'</tr>';
-  });
+  }
+
+  // ── Helper: section header row ──
+  function sectionHeader(label, colspan){
+    return '<tr><td colspan="'+colspan+'" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">'+label+'</td></tr>';
+  }
+
+  // ── ALL tab ──
+  if(activeScoresTab==='all'){
+    if(!scores.length){
+      el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO SCORES YET — START BAKING! 🦄🍪</p>';
+      return;
+    }
+    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
+    scores.slice(0,25).forEach((s,i)=>{ h+=row(i+1,s,true); });
+    el.innerHTML=h+'</tbody></table>';
+    return;
+  }
+
+  // ── DAILY tab ──
+  const td=dailyData.today, p1=dailyData.prev1, p2=dailyData.prev2;
+  const hasAny=td.scores.length||p1.scores.length||p2.scores.length;
+  if(!hasAny){
+    el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO DAILY SCORES YET — HIT 📅 DAILY! 🦄🍪</p>';
+    return;
+  }
+
+  const COLS=7; // colspan for section headers (no type icon on daily)
+  let h='<table class="stbl"><thead><tr><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
+
+  if(td.scores.length){
+    h+=sectionHeader('📅 '+td.date+' — TOP 10', COLS-1);
+    td.scores.slice(0,10).forEach((s,i)=>{ h+=row(i+1,s,false); });
+  }
+  if(p1.scores.length){
+    h+=sectionHeader('📅 '+p1.date+' — TOP 5', COLS-1);
+    p1.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
+  }
+  if(p2.scores.length){
+    h+=sectionHeader('📅 '+p2.date+' — TOP 5', COLS-1);
+    p2.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
+  }
   el.innerHTML=h+'</tbody></table>';
 }
 
