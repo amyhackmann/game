@@ -401,7 +401,7 @@ html, body {
 /* Scores tabs */
 .scores-tabs { display:flex; gap:4px; margin-bottom:10px; }
 .scores-tab {
-  flex:1; padding:5px 4px; font-family:'Press Start 2P',monospace; font-size:8px;
+  flex:1; padding:5px 2px; font-family:'Press Start 2P',monospace; font-size:7px;
   background:none; border:1px solid #4a2f8a; color:#888; cursor:pointer;
 }
 .scores-tab.active { border-color:#ffd700; color:#ffd700; background:#0d0628; }
@@ -578,6 +578,7 @@ html, body {
     <div class="scores-tabs">
       <button class="scores-tab active" id="tab-all"   onclick="switchScoresTab('all')">&#x1F3AE; ALL</button>
       <button class="scores-tab"        id="tab-daily" onclick="switchScoresTab('daily')">&#x1F4C5; DAILY</button>
+      <button class="scores-tab"        id="tab-hof"   onclick="switchScoresTab('hof')">&#x1F3C6; HOF</button>
     </div>
     <div id="scores-content"></div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
@@ -630,7 +631,8 @@ let TOTAL=(COLS*ROWS)-MONSTERS;
 let grid=[], pos={x:0,y:0}, baked=0, active=false, isDaily=false;
 // scores = in-memory cache; pre-seed from localStorage so local saves show immediately
 let scores=JSON.parse(localStorage.getItem('mcb_v7')||'[]');
-let activeScoresTab='all'; // 'all' or 'daily'
+let activeScoresTab='all'; // 'all', 'daily', or 'hof'
+let hofData=[]; // Hall of Fame weeks
 let SZ=20;
 let showMonsters=false; // V2: show/hide monsters toggle
 
@@ -1046,6 +1048,7 @@ async function fetchScores(){
     const data=await r.json();
     scores=data.all||[];
     if(data.daily) dailyData=data.daily;
+    if(data.hof)   hofData=data.hof;
   } catch(e){
     // silently keep in-memory data
   }
@@ -1113,22 +1116,32 @@ function clearScores(){
 
 function switchScoresTab(tab){
   activeScoresTab=tab;
-  document.getElementById('tab-all').classList.toggle('active', tab==='all');
+  document.getElementById('tab-all').classList.toggle('active',   tab==='all');
   document.getElementById('tab-daily').classList.toggle('active', tab==='daily');
+  document.getElementById('tab-hof').classList.toggle('active',   tab==='hof');
   renderScores();
+}
+
+function getBadge(pct){
+  if(pct>=90) return '🥇';
+  if(pct>=70) return '🥈';
+  if(pct>=50) return '🥉';
+  return '🍪';
 }
 
 function renderScores(){
   const el=document.getElementById('scores-content');
 
-  // ── Helper: build a table row ──
+  // ── Row builder ──
   function row(rank, s, showType){
     const suffix=rank===1?'st':rank===2?'nd':rank===3?'rd':'th';
     const typeIcon=s.daily?'📅':'🎮';
     const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
     const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
+    const b=s.badge||getBadge(s.pct);
     return '<tr>'
       +(showType?'<td>'+typeIcon+'</td>':'')
+      +'<td>'+b+'</td>'
       +'<td style="color:#ffd700">'+rank+suffix+'</td>'
       +'<td>'+s.ini+'</td>'
       +'<td style="color:#00ff88">'+s.pct+'%</td>'
@@ -1138,9 +1151,8 @@ function renderScores(){
       +'</tr>';
   }
 
-  // ── Helper: section header row ──
-  function sectionHeader(label, colspan){
-    return '<tr><td colspan="'+colspan+'" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">'+label+'</td></tr>';
+  function sectionHeader(label, cols){
+    return '<tr><td colspan="'+cols+'" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">'+label+'</td></tr>';
   }
 
   // ── ALL tab ──
@@ -1149,36 +1161,64 @@ function renderScores(){
       el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO SCORES YET — START BAKING! 🦄🍪</p>';
       return;
     }
-    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
+    let h='<table class="stbl"><thead><tr><th></th><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
     scores.slice(0,25).forEach((s,i)=>{ h+=row(i+1,s,true); });
     el.innerHTML=h+'</tbody></table>';
     return;
   }
 
   // ── DAILY tab ──
-  const td=dailyData.today, p1=dailyData.prev1, p2=dailyData.prev2;
-  const hasAny=td.scores.length||p1.scores.length||p2.scores.length;
-  if(!hasAny){
-    el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO DAILY SCORES YET — HIT 📅 DAILY! 🦄🍪</p>';
+  if(activeScoresTab==='daily'){
+    const td=dailyData.today, p1=dailyData.prev1, p2=dailyData.prev2;
+    const hasAny=td.scores.length||p1.scores.length||p2.scores.length;
+    if(!hasAny){
+      el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO DAILY SCORES YET — HIT 📅 DAILY! 🦄🍪</p>';
+      return;
+    }
+    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
+    if(td.scores.length){
+      h+=sectionHeader('📅 '+td.date+' — TOP 10',7);
+      td.scores.slice(0,10).forEach((s,i)=>{ h+=row(i+1,s,false); });
+    }
+    if(p1.scores.length){
+      h+=sectionHeader('📅 '+p1.date+' — TOP 5',7);
+      p1.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
+    }
+    if(p2.scores.length){
+      h+=sectionHeader('📅 '+p2.date+' — TOP 5',7);
+      p2.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
+    }
+    el.innerHTML=h+'</tbody></table>';
     return;
   }
 
-  const COLS=7; // colspan for section headers (no type icon on daily)
-  let h='<table class="stbl"><thead><tr><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
-
-  if(td.scores.length){
-    h+=sectionHeader('📅 '+td.date+' — TOP 10', COLS-1);
-    td.scores.slice(0,10).forEach((s,i)=>{ h+=row(i+1,s,false); });
+  // ── HOF tab ──
+  if(activeScoresTab==='hof'){
+    if(!hofData.length){
+      el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">HALL OF FAME STARTS NEXT MONDAY! 🦄🏆</p>';
+      return;
+    }
+    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th></tr></thead><tbody>';
+    hofData.forEach(week=>{
+      h+=sectionHeader('🏆 WEEK OF '+week.week,6);
+      week.scores.slice(0,5).forEach((s,i)=>{ 
+        const suffix=i===0?'st':i===1?'nd':i===2?'rd':'th';
+        const b=s.badge||getBadge(s.pct);
+        const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
+        const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
+        h+='<tr>'
+          +'<td>'+b+'</td>'
+          +'<td style="color:#ffd700">'+(i+1)+suffix+'</td>'
+          +'<td>'+s.ini+'</td>'
+          +'<td style="color:#00ff88">'+s.pct+'%</td>'
+          +'<td>'+monIcon+'</td>'
+          +'<td style="color:#aaa">'+cookies+'</td>'
+          +'</tr>';
+      });
+    });
+    el.innerHTML=h+'</tbody></table>';
+    return;
   }
-  if(p1.scores.length){
-    h+=sectionHeader('📅 '+p1.date+' — TOP 5', COLS-1);
-    p1.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
-  }
-  if(p2.scores.length){
-    h+=sectionHeader('📅 '+p2.date+' — TOP 5', COLS-1);
-    p2.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
-  }
-  el.innerHTML=h+'</tbody></table>';
 }
 
 // Pre-fetch scores on load so the leaderboard opens instantly
