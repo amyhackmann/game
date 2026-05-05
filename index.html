@@ -1218,7 +1218,7 @@ function renderScores(){
       const b=getBadge(s.pct, s.badge);
       const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
       const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
-      const dateShort=s.date?s.date.split(' ').slice(0,2).join(' '):'-';
+      const dateShort=s.date||'-';
       h+='<tr>'
         +'<td>'+b+'</td>'
         +'<td style="color:#ffd700">'+(i+1)+suffix+'</td>'
@@ -1226,7 +1226,7 @@ function renderScores(){
         +'<td style="color:#00ff88">'+s.pct+'%</td>'
         +(monIcon?'<td>'+monIcon+'</td>':'<td></td>')
         +'<td style="color:#aaa">'+cookies+'</td>'
-        +'<td>'+dateShort+'</td>'
+        +'<td style="font-size:7px">'+dateShort+'</td>'
         +'</tr>';
     });
     el.innerHTML=h+'</tbody></table>';
