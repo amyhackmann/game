@@ -579,7 +579,7 @@ html, body {
     <div class="scores-tabs">
       <button class="scores-tab active" id="tab-all"   onclick="switchScoresTab('all')">&#x1F3AE; WEEK</button>
       <button class="scores-tab"        id="tab-daily" onclick="switchScoresTab('daily')">&#x1F4C5; DAILY</button>
-      <button class="scores-tab"        id="tab-hof"   onclick="switchScoresTab('hof')">&#x1F3C6; HOF</button>
+      <button class="scores-tab"        id="tab-hof"   onclick="switchScoresTab('hof')">&#x1F3C6; H.O.F</button>
     </div>
     <div id="scores-content"></div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
@@ -1172,6 +1172,7 @@ function renderScores(){
       return;
     }
     let h='<table class="stbl"><thead><tr><th></th><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
+    h+='<tr><td colspan="8" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🎮 Weekly Top 25 — Resets Every Monday</td></tr>';
     scores.slice(0,25).forEach((s,i)=>{ h+=row(i+1,s,true); });
     el.innerHTML=h+'</tbody></table>';
     return;
@@ -1187,18 +1188,15 @@ function renderScores(){
     }
     let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
     if(td.scores.length){
-      const tdShort=td.date?td.date.split(' ').slice(0,2).join(' '):td.date;
-      h+=sectionHeader('📅 '+tdShort+' — TOP 10',7);
+      h+=sectionHeader('📅 '+td.date+' — TOP 10',7);
       td.scores.slice(0,10).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     if(p1.scores.length){
-      const p1Short=p1.date?p1.date.split(' ').slice(0,2).join(' '):p1.date;
-      h+=sectionHeader('📅 '+p1Short+' — TOP 5',7);
+      h+=sectionHeader('📅 '+p1.date+' — TOP 5',7);
       p1.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     if(p2.scores.length){
-      const p2Short=p2.date?p2.date.split(' ').slice(0,2).join(' '):p2.date;
-      h+=sectionHeader('📅 '+p2Short+' — TOP 5',7);
+      h+=sectionHeader('📅 '+p2.date+' — TOP 5',7);
       p2.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     el.innerHTML=h+'</tbody></table>';
