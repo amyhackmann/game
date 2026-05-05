@@ -1187,7 +1187,6 @@ function renderScores(){
       return;
     }
     let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
-    h+='<tr><td colspan="7" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">📅 Daily Challenge Leaderboard</td></tr>';
     if(td.scores.length){
       h+=sectionHeader('📅 '+td.date+' — TOP 10',7);
       td.scores.slice(0,10).forEach((s,i)=>{ h+=row(i+1,s,false); });
@@ -1210,25 +1209,10 @@ function renderScores(){
       el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO HOF YET — KEEP BAKING! 🦄🏆</p>';
       return;
     }
-    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
-    h+='<tr><td colspan="7" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🏆 Hall Of Fame</td></tr>';
-    h+='<tr><td colspan="7" style="color:#aaa;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🏆 All-Time Personal Bests</td></tr>';
-    hofData.slice(0,25).forEach((s,i)=>{
-      const suffix=i===0?'st':i===1?'nd':i===2?'rd':'th';
-      const b=getBadge(s.pct, s.badge);
-      const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
-      const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
-      const dateShort=s.date||'-';
-      h+='<tr>'
-        +'<td>'+b+'</td>'
-        +'<td style="color:#ffd700">'+(i+1)+suffix+'</td>'
-        +'<td>'+s.ini+'</td>'
-        +'<td style="color:#00ff88">'+s.pct+'%</td>'
-        +(monIcon?'<td>'+monIcon+'</td>':'<td></td>')
-        +'<td style="color:#aaa">'+cookies+'</td>'
-        +'<td style="font-size:7px">'+dateShort+'</td>'
-        +'</tr>';
-    });
+    let h='<table class="stbl"><thead><tr><th></th><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
+    h+='<tr><td colspan="8" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🏆 Hall Of Fame</td></tr>';
+    h+='<tr><td colspan="8" style="color:#aaa;font-size:8px;padding:3px 3px 3px;border-bottom:1px solid #ffd700">🏆 All-Time Personal Bests</td></tr>';
+    hofData.slice(0,25).forEach((s,i)=>{ h+=row(i+1,s,true); });
     el.innerHTML=h+'</tbody></table>';
     return;
   }
