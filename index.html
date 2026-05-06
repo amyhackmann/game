@@ -720,10 +720,14 @@ function rng(seed){
 }
 function todaySeed(){
   const d=new Date();
-  return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  return d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate();
 }
 function dateStr(){
-  return new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
+  const d=new Date();
+  const day=d.getUTCDate().toString().padStart(2,'0');
+  const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()];
+  const yr=d.getUTCFullYear();
+  return day+' '+mon+' '+yr;
 }
 
 function startGame(daily){
@@ -1026,10 +1030,11 @@ const WORKER_READY = !WORKER_URL.includes('REPLACE_WITH');
 
 // Daily date helpers — returns "04 May 2026" style strings
 function dateStrOffset(daysAgo){
-  const d=new Date(); d.setDate(d.getDate()-daysAgo);
-  return d.getDate().toString().padStart(2,'0')+' '+
-    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+
-    d.getFullYear();
+  const d=new Date();
+  d.setUTCDate(d.getUTCDate()-daysAgo);
+  return d.getUTCDate().toString().padStart(2,'0')+' '+
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]+' '+
+    d.getUTCFullYear();
 }
 
 let dailyData={
