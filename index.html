@@ -586,6 +586,18 @@ html, body {
   </div>
 </div>
 
+<!-- SAVE RESULT POPUP -->
+<div class="popup" id="popup-saveresult">
+  <div class="popup-box" style="text-align:center;max-width:320px">
+    <h2 id="saveresult-title" style="font-size:10px;margin-bottom:12px"></h2>
+    <p id="saveresult-msg" style="font-size:9px;color:#ddd;line-height:2;margin-bottom:16px"></p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="overlay-btn" onclick="copyShare()"><span style="font-size:13px">&#x1F4E4;</span> SHARE</button>
+      <button class="overlay-btn" onclick="closeSaveResult()">&#x1F44D; GOT IT!</button>
+    </div>
+  </div>
+</div>
+
 <!-- ABOUT POPUP -->
 <div class="popup" id="popup-about">
   <div class="popup-box">
@@ -1145,10 +1157,101 @@ async function fetchScores(){
   }
 }
 
+// ── Save result messages ──────────────────────────────────────────────────
+const SR_MADE=[
+  'YOU MADE IT! You\'re #{rank} this week! 🦄🏆',
+  '#{rank} ON THE WEEKLY! The grid knows your name! 🦄🍪',
+  '#{rank} THIS WEEK! Your Unicorn is unstoppable! 🦄🔥',
+  'LEADERBOARD ALERT! You\'re sitting at #{rank}! 🦄🏆',
+  '#{rank} AND CLIMBING! Come back and go higher! 🦄🔥',
+  '#{rank} ON THE BOARD! The competition should be scared! 🍪👑',
+  'YOU CRACKED THE TOP 25! #{rank} this week! 🦄🎉',
+  '#{rank} WEEKLY! Your baking is ELITE! 🦄🍪👑',
+  '#{rank} THIS WEEK! Can you climb higher? 🦄🏆🔥',
+  '#{rank} ON THE LEADERBOARD! The Unicorn is RISING! 🦄🍪'
+];
+const SR_MISS=[
+  '{pct}% — not on the weekly leaderboard yet! Keep baking! 🦄🍪🔥',
+  '{pct}% baked! Not on the leaderboard this week — but you\'re getting closer! 🦄✨',
+  '{pct}%! Just missed the weekly leaderboard — one more game! 🦄🍪',
+  '{pct}% this time — not on the board yet! Your best game is still ahead! 🦄🔥',
+  '{pct}%! Not on the weekly leaderboard yet — the grid won\'t know what hit it next time! 🍪👑',
+  '{pct}% — so close to the leaderboard! Come back stronger! 🦄🍪🔥',
+  '{pct}%! Not on the board this week — every game makes you better! 🦄✨',
+  '{pct}%! Just outside the leaderboard — the grid respects your effort! Try again! 🍪🔥',
+  '{pct}%! Not on the weekly leaderboard yet — one more run! 🦄🍪👑',
+  '{pct}%! Not on the board yet — your Unicorn is warming up! Next game is THE one! 🦄✨'
+];
+const SR_HOF_NEW=[
+  'HALL OF FAME! You\'re in the all-time top 25! 🦄🌟',
+  'HOF ENTRY! Your name is in the Hall of Fame forever! 🦄🏆',
+  'HALL OF FAME UNLOCKED! All-time personal best! 🦄🌟🏆',
+  'YOU\'RE IN THE HOF! The legends welcome you! 🏆🌟',
+  'ALL-TIME PERSONAL BEST! Hall of Fame baker! 🦄🏆👑',
+  'HOF STATUS ACHIEVED! Your Unicorn is immortal! 🦄🌟',
+  'WELCOME TO THE HALL OF FAME! You earned it! 🦄🏆🌟',
+  'HOF BAKER! Your personal best lives forever! 🦄🏆✨',
+  'HALL OF FAME! The all-time leaderboard bows to you! 🏆🌟',
+  'YOU MADE THE HOF! Screenshot this moment! 📸🦄🌟'
+];
+const SR_HOF_PB=[
+  'NEW PERSONAL BEST! Your HOF rank just improved! 🦄🏆',
+  'PB SMASHED! You climbed the Hall of Fame! 🦄🌟👑',
+  'HOF RANK UP! Your personal best got better! 🦄🌟🏆',
+  'YOU BEAT YOURSELF! New HOF personal best! 🌟🏆',
+  'NEW PB! The Hall of Fame just got updated! 🦄🌟',
+  'PERSONAL BEST BROKEN! HOF climbing! 🦄🏆🌟',
+  'YOUR BEST JUST GOT BETTER! HOF rank improved! 🦄🏆',
+  'PB ALERT! You\'re moving up the Hall of Fame! 🦄🌟🔥',
+  'BEAT YOUR OWN RECORD! That\'s the hardest win! 🌟🏆',
+  'NEW PERSONAL BEST! The HOF salutes you! 🦄🌟🏆'
+];
+
+function pickMsg(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function showSaveResult(pct, newScores, newHof, oldHof){
+  // Check weekly rank
+  const weeklyRank = newScores.findIndex(function(s){ return s.pct===pct; });
+  const onWeekly = weeklyRank >= 0 && weeklyRank < 25;
+
+  // Check HOF
+  const oldHofEntry = oldHof.find(function(s){ return s.ini === getInitialsValue(); });
+  const newHofEntry = newHof.find(function(s){ return s.ini === getInitialsValue(); });
+  const hofImproved = newHofEntry && oldHofEntry && newHofEntry.pct > oldHofEntry.pct;
+  const hofNew = newHofEntry && !oldHofEntry;
+
+  let title, msg;
+
+  if(hofNew){
+    title='🏆 HALL OF FAME!';
+    msg=pickMsg(SR_HOF_NEW);
+  } else if(hofImproved){
+    title='🌟 PERSONAL BEST!';
+    msg=pickMsg(SR_HOF_PB);
+  } else if(onWeekly){
+    const suffix=(weeklyRank+1)===1?'1st':(weeklyRank+1)===2?'2nd':(weeklyRank+1)===3?'3rd':(weeklyRank+1)+'th';
+    title='🎉 ON THE LEADERBOARD!';
+    msg=pickMsg(SR_MADE).replace('#{rank}',suffix);
+  } else {
+    title='🦄 KEEP BAKING!';
+    msg=pickMsg(SR_MISS).replace('{pct}',pct+'%');
+  }
+
+  document.getElementById('saveresult-title').textContent=title;
+  document.getElementById('saveresult-msg').textContent=msg;
+  openPopup('saveresult');
+}
+
+function closeSaveResult(){
+  closePopup('saveresult');
+}
+
 async function saveScore(){
   const ini = getInitialsValue();
   const pct=parseFloat(((baked/TOTAL)*100).toFixed(1));
   const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,monsters:peekedMonsters,ts:Date.now()};
+  const oldHof=[...hofData];
+
 
   if(!WORKER_READY){
     scores.push(entry);
@@ -1198,6 +1301,7 @@ async function saveScore(){
   hideDetail(); hideGobar();
   activeScoresTab = isDaily ? 'daily' : 'all';
   openPopup('scores'); renderScores();
+  setTimeout(function(){ showSaveResult(pct, scores, hofData, oldHof); }, 400);
 }
 
 function clearScores(){
@@ -1313,7 +1417,27 @@ async function loadScoresInBackground(){
   await fetchScores();
 }
 function copyShare(){
-  const txt=document.getElementById('share-text').textContent;
+  let txt=document.getElementById('share-text').textContent;
+
+  // Fallback — rebuild share text if panel was hidden
+  if(!txt || !txt.trim()){
+    const url='https://game.amyhackmannconsulting.com/';
+    const pct=((baked/TOTAL)*100).toFixed(1);
+    if(isDaily){
+      txt='🦄 Unicorn Cookie Bakery 🍪\n'+
+          'Daily Challenge — '+dateStr()+'\n'+
+          'I baked '+baked+' of '+TOTAL+' cookies ('+pct+'%) 🍪✨\n\n'+
+          'Can you beat me? 🦄\n\n'+
+          '🕹️ Play now → '+url+'\n'+
+          '#UnicornCookieBakery #BakeThemAll 🦄🍪';
+    } else {
+      txt='🦄 Unicorn Cookie Bakery 🍪\n'+
+          'I baked '+baked+' of '+TOTAL+' cookies ('+pct+'%) 🍪✨\n'+
+          'Can you beat me? 🦄\n\n'+
+          '🕹️ Play now → '+url+'\n'+
+          '#UnicornCookieBakery #BakeThemAll 🦄🍪';
+    }
+  }
 
   // 1. Native share sheet (iOS Safari, Android Chrome) — best on mobile
   if(navigator.share){
