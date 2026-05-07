@@ -1158,29 +1158,65 @@ async function fetchScores(){
 }
 
 // ── Save result messages ──────────────────────────────────────────────────
-const SR_MADE=[
+const SR_MADE_WEEKLY=[
   'YOU MADE IT! You\'re #{rank} this week! 🦄🏆',
   '#{rank} ON THE WEEKLY! The grid knows your name! 🦄🍪',
   '#{rank} THIS WEEK! Your Unicorn is unstoppable! 🦄🔥',
-  'LEADERBOARD ALERT! You\'re sitting at #{rank}! 🦄🏆',
+  'WEEKLY LEADERBOARD ALERT! You\'re sitting at #{rank}! 🦄🏆',
   '#{rank} AND CLIMBING! Come back and go higher! 🦄🔥',
-  '#{rank} ON THE BOARD! The competition should be scared! 🍪👑',
+  '#{rank} ON THE WEEKLY BOARD! The competition should be scared! 🍪👑',
   'YOU CRACKED THE TOP 25! #{rank} this week! 🦄🎉',
   '#{rank} WEEKLY! Your baking is ELITE! 🦄🍪👑',
   '#{rank} THIS WEEK! Can you climb higher? 🦄🏆🔥',
-  '#{rank} ON THE LEADERBOARD! The Unicorn is RISING! 🦄🍪'
+  '#{rank} ON THE WEEKLY LEADERBOARD! The Unicorn is RISING! 🦄🍪'
 ];
-const SR_MISS=[
-  '{pct}% — not on the weekly leaderboard yet! Keep baking! 🦄🍪🔥',
-  '{pct}% baked! Not on the leaderboard this week — but you\'re getting closer! 🦄✨',
-  '{pct}%! Just missed the weekly leaderboard — one more game! 🦄🍪',
-  '{pct}% this time — not on the board yet! Your best game is still ahead! 🦄🔥',
-  '{pct}%! Not on the weekly leaderboard yet — the grid won\'t know what hit it next time! 🍪👑',
-  '{pct}% — so close to the leaderboard! Come back stronger! 🦄🍪🔥',
-  '{pct}%! Not on the board this week — every game makes you better! 🦄✨',
-  '{pct}%! Just outside the leaderboard — the grid respects your effort! Try again! 🍪🔥',
-  '{pct}%! Not on the weekly leaderboard yet — one more run! 🦄🍪👑',
-  '{pct}%! Not on the board yet — your Unicorn is warming up! Next game is THE one! 🦄✨'
+const SR_MADE_DAILY=[
+  'YOU MADE TODAY\'S DAILY! You\'re #{rank} today! 🦄📅🏆',
+  '#{rank} ON TODAY\'S DAILY LEADERBOARD! 🦄📅🍪',
+  '#{rank} DAILY! Your Unicorn owned today\'s grid! 🦄🔥📅',
+  'DAILY LEADERBOARD! You\'re #{rank} today! 🦄📅🏆',
+  '#{rank} ON THE DAILY BOARD! Come back tomorrow! 🦄📅🔥',
+  '#{rank} TODAY! The Daily grid bows to you! 🍪👑📅',
+  'YOU CRACKED THE DAILY TOP 10! #{rank} today! 🦄🎉📅',
+  '#{rank} ON THE DAILY! Your baking is on fire! 🦄🍪👑',
+  '#{rank} DAILY! Can you top it tomorrow? 🦄🏆🔥📅',
+  '#{rank} ON TODAY\'S LEADERBOARD! The Unicorn is RISING! 🦄🍪📅'
+];
+const SR_MISS_WEEKLY=[
+  '{pct}% — not on the Weekly leaderboard yet! One more game! 🦄🍪🔥',
+  '{pct}% baked! The Weekly leaderboard is calling — come back and claim it! 🦄✨',
+  '{pct}%! So close to the Weekly leaderboard — you\'ve got this! 🦄🍪🔥',
+  '{pct}% this time — the Weekly leaderboard is RIGHT around the corner! 🦄🔥',
+  '{pct}%! Not on the Weekly board yet — the grid is scared of what\'s coming! 🍪👑🦄',
+  '{pct}% — keep going! The Weekly leaderboard won\'t know what hit it! 🦄🍪🔥',
+  '{pct}%! Every game makes you stronger — the Weekly leaderboard is within reach! 🦄✨',
+  '{pct}%! Not on the Weekly board yet — your Unicorn is getting DANGEROUS! 🦄😤🍪',
+  '{pct}%! One more run and the Weekly leaderboard is YOURS! 🦄🍪👑🔥',
+  '{pct}%! Your best Weekly game is still ahead — come back and BAKE them ALL! 🦄✨🔥'
+];
+const SR_MISS_DAILY=[
+  '{pct}% — not on today\'s Daily leaderboard yet! Try again tomorrow! 🦄📅🔥',
+  '{pct}% baked! Today\'s Daily leaderboard is within reach — one more go! 🦄✨',
+  '{pct}%! So close to the Daily leaderboard — you\'ve got what it takes! 🦄🍪🔥',
+  '{pct}% this time — the Daily leaderboard is RIGHT there! 🦄🔥📅',
+  '{pct}%! Not on the Daily board yet — the grid won\'t know what hit it! 🍪👑🦄',
+  '{pct}% — keep baking! The Daily leaderboard is calling your name! 🦄🍪🔥',
+  '{pct}%! Every attempt makes you stronger — the Daily board is within reach! 🦄✨',
+  '{pct}%! Not on the Daily board yet — your Unicorn is warming up! 🦄😤🍪',
+  '{pct}%! One more Daily run and that leaderboard is YOURS! 🦄🍪👑🔥',
+  '{pct}%! Your best Daily game is still ahead — come back tomorrow! 🦄✨📅'
+];
+const SR_MISS_HOF=[
+  '{pct}% — not in the Hall of Fame yet! Keep chasing that personal best! 🦄🏆🔥',
+  '{pct}% baked! The Hall of Fame is waiting for you — keep pushing! 🦄✨🏆',
+  '{pct}%! So close to the Hall of Fame — one big game will do it! 🦄🍪🏆',
+  '{pct}% this time — your Hall of Fame moment is coming! 🦄🔥🏆',
+  '{pct}%! Not in the HOF yet — but your Unicorn is on the rise! 🦄🍪👑',
+  '{pct}% — keep going! The Hall of Fame won\'t know what hit it! 🦄🍪🔥🏆',
+  '{pct}%! Every game gets you closer to Hall of Fame glory! 🦄✨🏆',
+  '{pct}%! Not in the HOF yet — your best game is still ahead! 🦄😤🏆',
+  '{pct}%! One more run and the Hall of Fame is YOURS! 🦄🍪👑🏆',
+  '{pct}%! The Hall of Fame is calling — come back and answer it! 🦄✨🏆🔥'
 ];
 const SR_HOF_NEW=[
   'HALL OF FAME! You\'re in the all-time top 25! 🦄🌟',
@@ -1210,18 +1246,35 @@ const SR_HOF_PB=[
 function pickMsg(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function showSaveResult(pct, newScores, newHof, oldHof){
-  // Check weekly rank
-  const weeklyRank = newScores.findIndex(function(s){ return s.pct===pct; });
-  const onWeekly = weeklyRank >= 0 && weeklyRank < 25;
+  const ini = getInitialsValue();
 
-  // Check HOF
-  const oldHofEntry = oldHof.find(function(s){ return s.ini === getInitialsValue(); });
-  const newHofEntry = newHof.find(function(s){ return s.ini === getInitialsValue(); });
+  // ── HOF checks ──
+  const oldHofEntry = oldHof.find(function(s){ return s.ini===ini; });
+  const newHofEntry = newHof.find(function(s){ return s.ini===ini; });
+  const hofNew      = newHofEntry && !oldHofEntry;
   const hofImproved = newHofEntry && oldHofEntry && newHofEntry.pct > oldHofEntry.pct;
-  const hofNew = newHofEntry && !oldHofEntry;
 
-  let title, msg;
+  // ── Weekly rank check ──
+  const weeklyIdx = newScores.findIndex(function(s){ return s.pct===pct && s.ini===ini; });
+  const onWeekly  = weeklyIdx >= 0;
 
+  // ── Daily rank check (only for daily games) ──
+  var onDaily = false;
+  var dailyRank = -1;
+  if(isDaily){
+    var todayScores = dailyData.today ? dailyData.today.scores : [];
+    dailyRank = todayScores.findIndex(function(s){ return s.pct===pct && s.ini===ini; });
+    onDaily = dailyRank >= 0;
+  }
+
+  function rankSuffix(idx){
+    var n=idx+1;
+    return n===1?'1st':n===2?'2nd':n===3?'3rd':n+'th';
+  }
+
+  var title, msg;
+
+  // Priority: HOF new > HOF PB > Weekly > Daily > Miss
   if(hofNew){
     title='🏆 HALL OF FAME!';
     msg=pickMsg(SR_HOF_NEW);
@@ -1229,12 +1282,22 @@ function showSaveResult(pct, newScores, newHof, oldHof){
     title='🌟 PERSONAL BEST!';
     msg=pickMsg(SR_HOF_PB);
   } else if(onWeekly){
-    const suffix=(weeklyRank+1)===1?'1st':(weeklyRank+1)===2?'2nd':(weeklyRank+1)===3?'3rd':(weeklyRank+1)+'th';
-    title='🎉 ON THE LEADERBOARD!';
-    msg=pickMsg(SR_MADE).replace('#{rank}',suffix);
+    title='🎉 ON THE WEEKLY!';
+    msg=pickMsg(SR_MADE_WEEKLY).replace(/#{rank}/g, rankSuffix(weeklyIdx));
+  } else if(onDaily){
+    title='📅 ON THE DAILY!';
+    msg=pickMsg(SR_MADE_DAILY).replace(/#{rank}/g, rankSuffix(dailyRank));
   } else {
+    // Missed all — show specific message based on game type
     title='🦄 KEEP BAKING!';
-    msg=pickMsg(SR_MISS).replace('{pct}',pct+'%');
+    if(isDaily){
+      msg=pickMsg(SR_MISS_DAILY).replace(/{pct}/g, pct+'%');
+    } else if(!newHofEntry){
+      // Not on weekly AND not in HOF
+      msg=pickMsg(SR_MISS_HOF).replace(/{pct}/g, pct+'%');
+    } else {
+      msg=pickMsg(SR_MISS_WEEKLY).replace(/{pct}/g, pct+'%');
+    }
   }
 
   document.getElementById('saveresult-title').textContent=title;
