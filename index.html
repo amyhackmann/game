@@ -543,31 +543,29 @@ html, body {
   <div class="popup-box">
     <button class="popup-x" onclick="closePopup('howto')">&#x2715;</button>
     <h2>&#x2753; HOW TO PLAY</h2>
-    <div class="sec">
-      <h3>&#x1F4CB; Summary</h3>
-      <p>You are a &#x1F984; Unicorn trying to turn the whole Grid into &#x1F36A; Cookies!</p>
-      <p>&#x25A1; Tap a <b>yellow number</b> next to your Unicorn to bake that many Cookies in a row.</p>
-      <p>Your &#x1F984; moves to the <b>end of the row</b>. Keep chaining!</p>
-      <p>&#x1F6D1; GAME OVER if your path hits a &#x1F47E; Monster, your own &#x1F36A; trail, or the edge!</p>
+    <div class="sec" style="padding:6px 8px">
+      <p style="font-size:9px;line-height:2">&#x1F984; Bake as many cookies as possible!</p>
+      <p style="font-size:9px;line-height:2">&#x25A1; Tap a <b>yellow cell</b> next to your Unicorn</p>
+      <p style="font-size:9px;line-height:2">&#x1F522; The number = cookies baked in that direction</p>
+      <p style="font-size:9px;line-height:2">&#x1F984; Unicorn moves to end of row — keep chaining!</p>
     </div>
-    <div class="sec">
-      <h3>&#x1F4D6; Details</h3>
-      <p>&#x1F984; Bake as many cookies as possible!</p>
-      <p>&#x1F47E; Avoid the hidden Cookie Monsters!</p>
-      <p>&#x25A1; Tap a yellow cell next to your unicorn</p>
-      <p>&#x1F522; The number = cookies baked in that direction</p>
-      <p>&#x1F984; Your unicorn moves to the end of the row</p>
-      <p>&#x1F501; Keep chaining to bake as many as you can!</p>
-      <p>&#x1F47E; Hit a Cookie Monster = GAME OVER</p>
-      <p>&#x1F36A; Run into your own Cookie trail = GAME OVER</p>
-      <p>&#x1F6AB; Fall off the edge = GAME OVER</p>
-      <p>&#x1F6D1; Run out of valid moves = GAME OVER</p>
-      <p>&#x1F4C5; Daily = same grid for everyone, new one each day!</p>
-      <p id="scoring-text">&#x1F3C6; Score = Cookies Baked &divide; Total Grid</p>
+    <div class="sec" style="padding:6px 8px;margin-top:4px">
+      <p style="font-size:8px;color:#ff9ff3;margin-bottom:4px"><b>&#x1F4A5; GAME OVER IF YOU...</b></p>
+      <p style="font-size:9px;line-height:1.8">&#x1F47E; Hit a Cookie Monster &nbsp;&#x1F36A; Run into your trail</p>
+      <p style="font-size:9px;line-height:1.8">&#x1F6AB; Fall off the edge &nbsp;&#x1F6D1; Run out of moves</p>
     </div>
-    <div style="text-align:center;margin-top:10px">
+    <div class="sec" style="padding:6px 8px;margin-top:4px">
+      <p style="font-size:8px;color:#ff9ff3;margin-bottom:4px"><b>&#x1F4C5; DAILY CHALLENGE &amp; SCORING</b></p>
+      <p style="font-size:9px;line-height:1.8">&#x1F4C5; Same grid for everyone, new one each day!</p>
+      <p style="font-size:9px;line-height:1.8">&#x1F4C5;&#x23F0; Resets Noon UTC — Unicorn Cookie Time! &#x1F984;&#x1F36A;&#x1F55B;</p>
+      <p style="font-size:9px;line-height:1.8" id="scoring-text">&#x1F3C6; Score = Cookies Baked &divide; Total Grid</p>
+      <p style="font-size:9px;line-height:1.8">&#x1F3AE;&#x23F0; Weekly scores reset Mon Noon UTC</p>
+    </div>
+    <div style="text-align:center;margin-top:8px">
       <button class="overlay-btn" onclick="closePopup('howto')">&#x2715; CLOSE</button>
     </div>
+  </div>
+</div>
   </div>
 </div>
 
@@ -636,6 +634,7 @@ let activeScoresTab='all'; // 'all', 'daily', or 'hof'
 let hofData=[]; // Hall of Fame weeks
 let SZ=20;
 let showMonsters=false; // V2: show/hide monsters toggle
+let peekedMonsters=false; // true if monsters were shown at any point this game
 
 function pickGrid(){
   const W=window.innerWidth, H=window.innerHeight, land=W>H;
@@ -718,12 +717,21 @@ function rng(seed){
   let s=seed;
   return ()=>{ s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; };
 }
-function todaySeed(){
+// Game day resets at noon UTC — before noon = still "yesterday's" game day
+function utcGameDay(daysAgo) {
+  if(daysAgo===undefined) daysAgo=0;
   const d=new Date();
+  // If before noon UTC, we're still in the previous game day
+  const hourOffset = d.getUTCHours() < 12 ? -1 : 0;
+  d.setUTCDate(d.getUTCDate() + hourOffset - daysAgo);
+  return d;
+}
+function todaySeed(){
+  const d=utcGameDay();
   return d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate();
 }
 function dateStr(){
-  const d=new Date();
+  const d=utcGameDay();
   const day=d.getUTCDate().toString().padStart(2,'0');
   const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()];
   const yr=d.getUTCFullYear();
@@ -732,6 +740,7 @@ function dateStr(){
 
 function startGame(daily){
   isDaily=daily; baked=0; active=true;
+  peekedMonsters=false;
   // V2: close all popups when game starts
   document.querySelectorAll('.popup.open').forEach(p=>p.classList.remove('open'));
   hideGobar(); hideDetail();
@@ -836,88 +845,165 @@ function endGame(reason){
   render();
 
   const pct=((baked/TOTAL)*100).toFixed(1);
-  const band=Math.min(20,Math.floor(parseFloat(pct)/5));
+  const pctNum=parseFloat(pct);
+  const band=Math.min(19,Math.floor(pctNum/5));
 
   document.getElementById('go-title').textContent=
     reason==='monster'?'👾 You Hit a Cookie Monster!':
     reason==='edge'   ?'🌌 You fell off the edge of the Grid!':
     reason==='baked'  ?'🍪 You ran into your own cookie trail!':
-                       '🍪 No more moves left!';
+                       '🛑 No more moves left!';
   document.getElementById('go-score').textContent=
     baked+' of '+TOTAL+' cookies baked ('+pct+'%)';
 
-  const MM=[
-    'Ambushed immediately! The Monster was waiting! 👾',
-    'Barely out of the gate! The Monster pounced! 👾',
-    'Just warming up when — CHOMP! 👾😱',
-    'Getting started then Monster strikes! Keep going! 👾',
-    'A fifth of the way! The Monster got lucky! 👾',
-    'Quarter done! Not bad — watch those Monsters! 👾🍪',
-    '30%! You\'re learning the grid! 👾🦄',
-    'Solid effort! The Monster was sneaky! 🦄👾',
-    'Nearly half! That Monster had good timing! 👾🍪',
-    'So close to half! The Monster disagreed! 👾😤',
-    'HALFWAY HERO! You\'re an incredible baker! That Monster got SO lucky! 🦄🍪🔥',
-    'AMAZING! Over half baked and still going strong! You\'re a star! 🦄🍪⭐',
-    'OUTSTANDING! 60% baked! You\'re a Cookie Legend in the making! 🦄🍪🌟',
-    'BRILLIANT! Nearly 70%! You should be SO proud of that baking! 🦄🍪🎉',
-    'WOW! 70%! You are an ELITE baker! That Monster had NO right! 🦄🍪👑',
-    'THREE QUARTERS! You are INCREDIBLE! The Monster got absolutely lucky! 🦄🍪👑🔥',
-    '80%!! You are a MASTER BAKER! That Monster should be ASHAMED! 🦄🍪🏆🔥',
-    'PHENOMENAL! 85%+! You are basically a Cookie GOD! Almost had them ALL! 🦄🍪👑🔥',
-    'EXTRAORDINARY!! 90%! ELITE baker! One sneaky Monster cost you glory! 🦄🍪🏆🔥🌟',
-    'ARE YOU KIDDING?! 95%+!! COOKIE LEGEND! ONE Monster stood between you and immortality! 🦄🍪👑🏆🔥🌟',
-    'UNREAL!! YOU BAKED THEM ALL!! GREATEST BAKER IN THE UNIVERSE!! 🦄🍪👑🏆🔥🌟🎉🎊'
+  const MO=[
+    'That sneaky Monster was hiding RIGHT there! 👾😤',
+    'The Monster got lucky — you were on FIRE! 👾🔥',
+    'One Monster. ONE. That\'s all that stopped you! 👾😱',
+    'That Monster has been waiting all game for that moment! 👾😈',
+    'The Monster didn\'t deserve that win. YOU DID. 👾😤🦄'
   ];
-  const EM=[
-    'Oops! You baked yourself right off the edge of the grid! 🌌',
-    'Off so soon! Mind the edges! 🌌😬',
-    'Edge got you early! Stay in the kitchen! 🌌🦄',
-    'The edge is sneaky! You\'ll avoid it next time! 🌌',
-    '20% then whoosh! Watch those borders! 🌌🍪',
-    'Quarter done before the fall! Not bad! 🌌🦄',
-    '30% baked before tumbling off! Getting better! 🌌🍪',
-    'Solid baking before the big fall! 🌌🦄🍪',
-    'Nearly half before the edge got you! 🌌🍪🦄',
-    'So close to half! The edge disagreed! 🌌😤',
-    'HALFWAY HERO! Incredible baking before the fall! You\'re amazing! 🌌🦄🍪🔥',
-    'AMAZING! Over half baked! The edge robbed a superstar! 🌌🦄🍪⭐',
-    'OUTSTANDING! 60%! You\'re a Cookie Legend — the edge got SO lucky! 🌌🦄🍪🌟',
-    'BRILLIANT! Nearly 70% before the fall! You should be SO proud! 🌌🦄🍪🎉',
-    'WOW! 70%! You are ELITE! The edge had absolutely no right! 🌌🦄🍪👑',
-    'THREE QUARTERS before the fall! You are INCREDIBLE! 🌌🦄🍪👑🔥',
-    '80%!! MASTER BAKER! The edge stole your destiny! 🌌🦄🍪🏆🔥',
-    'PHENOMENAL! 85%+! Cookie GOD level baking! The edge barely stopped you! 🌌🦄🍪👑🔥',
-    'EXTRAORDINARY!! 90%! ELITE baking! The edge robbed a LEGEND! 🌌🦄🍪🏆🔥🌟',
-    'ARE YOU KIDDING?! 95%+!! The edge stole your IMMORTALITY! Unbelievable! 🌌🦄🍪👑🏆🔥🌟',
-    'UNREAL!! YOU BAKED THEM ALL!! GREATEST BAKER IN THE UNIVERSE!! 🦄🍪👑🏆🔥🌟🎉🎊'
+  const EO=[
+    'The edge came out of NOWHERE! 🌌😱',
+    'So close — the grid\'s border got greedy! 🌌😤',
+    'You baked SO far the edge got jealous! 🌌🦄',
+    'The edge of the grid is the only thing that stopped you! 🌌✨',
+    'One step too far! The universe wanted more cookies! 🌌🍪'
   ];
-  const TM=[
-    'Boxed in immediately! Tight spot! 🍪😬',
-    'Cornered early! Plan your path! 🍪🦄',
-    'Your own cookies blocked you! Tricky grid! 🍪',
-    'Hemmed in! Your trail outsmarted you! 🍪🦄',
-    '20% before getting cornered! Learning the ropes! 🍪🦄',
-    'Quarter baked before the dead end! Not bad! 🍪🦄',
-    '30% and then boxed in! Getting the hang of it! 🍪🦄',
-    'Solid run before your trail caught you! 🍪🦄✨',
-    'Nearly half before the dead end! Great effort! 🍪🦄',
-    'So close to half! Your own trail is a tough opponent! 🍪🦄',
-    'HALFWAY HERO! Your trail strategy was incredible! You\'re a star! 🍪🦄🔥',
-    'AMAZING! Past halfway! You\'re a Cookie Strategist extraordinaire! 🍪🦄⭐',
-    'OUTSTANDING! 60% baked! Cookie Legend in the making! 🍪🦄🌟',
-    'BRILLIANT! Nearly 70%! Your trail mastery is extraordinary! 🍪🦄🎉',
-    'WOW! 70%! ELITE Cookie Strategist! Your own trail had NO right stopping you! 🍪🦄👑',
-    'THREE QUARTERS! INCREDIBLE strategy! You are a baking GENIUS! 🍪🦄👑🔥',
-    '80%!! MASTER BAKER! Your trail maze was a work of ART! 🍪🦄🏆🔥',
-    'PHENOMENAL! 85%+! Cookie GENIUS! You nearly had them ALL! 🍪🦄👑🔥',
-    'EXTRAORDINARY!! 90%! Your trail was PERFECTION — almost! ELITE baker! 🍪🦄🏆🔥🌟',
-    'ARE YOU KIDDING?! 95%+!! Your own genius nearly beat you! COOKIE LEGEND! 🍪🦄👑🏆🔥🌟',
-    'UNREAL!! YOU BAKED THEM ALL!! GREATEST BAKER IN THE UNIVERSE!! 🦄🍪👑🏆🔥🌟🎉🎊'
+  const TO=[
+    'You ran straight into your own delicious trail! 🍪😄',
+    'Your cookies came back to haunt you! 🍪👻',
+    'Betrayed by your own baking! 🍪😱🦄',
+    'Your trail said no more! 🍪😤🦄',
+    'Even your cookies can\'t resist stopping you! 🍪😂🦄'
+  ];
+  const BO=[
+    'Your trail was SO good it outsmarted you! 🍪😄🦄',
+    'You baked yourself into a beautiful corner! 🍪👑🦄',
+    'Your cookie trail became a masterpiece maze! 🍪✨🦄',
+    'Boxed in by your own brilliance! 🍪👑😄',
+    'Your trail strategy was TOO perfect — even for you! 🍪🦄😄'
   ];
 
-  document.getElementById('go-flavor').textContent=
-    reason==='monster'?MM[band]:reason==='edge'?EM[band]:TM[band];
+  const BANDS=[
+    ['Just getting started! Every legend begins somewhere! 🦄',
+     'First steps taken! The grid is learning to fear you! 🦄🍪',
+     'A journey of 1000 cookies begins with one step! 🦄✨',
+     'You found the grid! Now let\'s BAKE! 🦄🍪',
+     '0-4%? The real warm-up starts NOW! 🔥🦄'],
+    ['5%+ and counting! You\'re finding your rhythm! 🦄🍪',
+     'Getting warmed up! The Unicorn is ready! 🦄🔥',
+     '5%+ baked! The grid doesn\'t know what\'s coming! 🦄😤',
+     'Early days! Your best game is ahead of you! 🦄✨',
+     '5%+ baker! Come back and double it! 🦄🍪🔥'],
+    ['10%+ baked! You\'re officially on the board! 🦄🍪',
+     'Double digits! Now we\'re getting somewhere! 🦄🔥',
+     '10%+! Your Unicorn is warming up nicely! 🦄✨',
+     'Double digit baker! The grid is paying attention! 🦄😤',
+     '10%+! Keep going — 20% is right there! 🦄🍪'],
+    ['15%+! You\'re finding your groove! 🦄🍪🔥',
+     'Nearly a fifth baked! Impressive start! 🦄✨',
+     '15%+ baker! Your trail is getting longer! 🦄🍪',
+     'Great start! The Unicorn is on a mission! 🦄🔥',
+     '15%+! Keep chaining — you\'re building momentum! 🦄✨'],
+    ['20%+! A fifth of the grid is YOURS! 🦄🍪',
+     'Getting serious now! 20%+ baker! 🦄🔥',
+     '20%+! Your Unicorn path is looking sharp! 🦄✨',
+     'One fifth baked! Now go for the second! 🦄🍪🔥',
+     '20%+ club! You\'re building something special! 🦄✨'],
+    ['QUARTER BAKED! That\'s a solid run! 🦄🍪🏆',
+     '25%+! Your trail strategy is developing! 🦄🔥',
+     'A quarter of the grid down! Three to go! 🦄✨',
+     '25%+ baker! The grid is starting to worry! 🦄😤',
+     'Quarter done! Your best game is coming! 🦄🍪🔥'],
+    ['30%+! Nearly a third baked! 🦄🍪🔥',
+     'Solid run! 30%+ and gaining confidence! 🦄✨',
+     '30%+! Your Unicorn is getting DANGEROUS! 🦄😤',
+     'Nearly a third of the grid! Keep chaining! 🦄🍪',
+     '30%+ baker! You\'re hitting your stride! 🦄🔥✨'],
+    ['35%+! Getting closer to halfway! 🦄🍪🔥',
+     'Impressive run! 35%+ baker on the rise! 🦄✨',
+     '35%+! Your trail is becoming a masterpiece! 🦄🍪',
+     'Almost 40%! The grid can\'t stop you! 🦄😤🔥',
+     '35%+ and building! 50% is within reach! 🦄✨🍪'],
+    ['40%+! Almost halfway! You\'re SO close! 🦄🍪🔥',
+     'Nearly half the grid baked! Incredible effort! 🦄✨',
+     '40%+! Your Unicorn is leaving its mark! 🦄🍪😤',
+     'Four tenths baked! Halfway is RIGHT THERE! 🦄🔥',
+     '40%+ baker! The grid is running out of places to hide! 🦄✨'],
+    ['SO CLOSE to half! 45%+ baker! 🦄🍪🔥',
+     'Nearly halfway! One more game and you\'ll crack 50%! 🦄✨',
+     '45%+! The Unicorn is SO close to halfway glory! 🦄🍪',
+     'Almost half the grid is YOURS! 🦄🔥😤',
+     '45%+! Halfway glory is within your grasp! 🦄✨🍪'],
+    ['HALFWAY HERO! 50%+! You\'re an official Cookie Baker! 🦄🍪',
+     'Over half the grid baked! Come back and smash it! 🍪✨',
+     '50%+ club! Tomorrow\'s grid is waiting for you! 🦄🍪',
+     'Half the grid is YOURS! The Unicorn is unstoppable! 🦄🔥',
+     '50%+! You\'ve crossed into elite territory! 🦄🏆✨'],
+    ['55%+! Your Unicorn is getting stronger every game! 🦄🍪',
+     'So close to 60%! One more game will do it! 🦄🔥',
+     'The grid fears your baking now! 55%+! 🦄😤',
+     '55%+ baker! You\'re on a serious roll! 🦄🍪✨',
+     'Solid baking! 60% is RIGHT there! 🔥🦄🏆'],
+    ['60%+! Master Baker territory unlocked! 🦄🏆',
+     'ELITE baking! Can you crack 70%? 🔥🦄',
+     '60%+ is seriously impressive! 🦄🍪👑',
+     'Getting closer to Legend status! 🦄✨🏆',
+     'Your Unicorn is on FIRE! 60%+! 🔥🦄🍪'],
+    ['Almost 70%! You can TASTE the gold! 🥇🦄',
+     '65%+! The Cookie Monsters are scared of you! 👾😱🦄',
+     'Your trail strategy is absolutely BEAUTIFUL! 🦄🍪✨',
+     '65%+ baker — closing in on Legend status! 🦄👑',
+     'One more game and 70% is YOURS! 🔥🦄🏆'],
+    ['LEGEND STATUS UNLOCKED! 70%+ baker! 🦄👑🏆',
+     'Your Unicorn is UNSTOPPABLE! Can you hit 80%? 🔥🦄',
+     '70%+!! The grid bows to your baking genius! 🦄🍪👑',
+     'We believe in you — 80% is RIGHT THERE! 🔥🦄🏆',
+     '70%+ ELITE baker! The leaderboard is calling! 🦄🏆🔥'],
+    ['THREE QUARTERS BAKED! You are INCREDIBLE! 🦄🏆🔥',
+     '75%+!! 80% is RIGHT THERE! Go get it! 🔥👑🦄',
+     'Your Unicorn path was an absolute MASTERPIECE! 🦄✨🍪',
+     '75%+! Screenshot this NOW before you beat it! 📸🦄',
+     'Elite baker! The grid never stood a chance! 🦄🍪👑🔥'],
+    ['80%!! MASTER BAKER!! The grid didn\'t stand a chance! 🦄🏆🔥',
+     'FOUR FIFTHS BAKED! You are ELITE level! 🔥👑🦄',
+     '80%+! Your friends won\'t believe this score! 📸🦄🍪',
+     'The grid didn\'t stand a CHANCE against you! 🦄🏆✨',
+     '80%+!! Cookie Royalty status approaching! 👑🦄🔥🏆'],
+    ['85%+!! COOKIE ROYALTY!! One more game for 90%! 👑🦄🔥',
+     'PHENOMENAL!! You left almost NOTHING for the Monsters! 👾😤🦄',
+     '85%+!! Screenshot this — nobody will believe it! 📸🦄🍪',
+     'SO close to 90%! Your Unicorn is a LEGEND! 🔥🦄👑',
+     '85%+!! The grid was powerless against your genius! 🦄🏆✨'],
+    ['90%!! UNICORN TIER!! You are BAKING HISTORY! 🦄👑🏆🔥',
+     'EXTRAORDINARY!! The grid is basically YOURS! 🦄🍪👑',
+     '90%+!! Frame this score — you are a LEGEND! 🖼️🦄🏆',
+     '90%+!! Only a handful of bakers EVER reach this! 🦄👑🔥🌟',
+     'UNICORN TIER UNLOCKED!! 90%+!! 🦄🌟🏆🔥'],
+    ['ARE YOU KIDDING?! 95%+!! COOKIE DEITY STATUS! 🦄👑🏆🔥🌟',
+     '95%+!! ONE thing stood between you and immortality! 😤🦄👑',
+     'UNREAL!! 95%+!! Your Unicorn deserves a TROPHY! 🏆🦄🍪👑',
+     '95%+!! You are the GREATEST BAKER IN THE UNIVERSE! 🦄🌟👑🏆',
+     'LEGENDARY!! 95%+!! The Cookie Monsters bow to YOU! 👾🙇🦄👑🌟']
+  ];
+
+  const PB=[
+    'NEW PERSONAL BEST!! Your best just got BETTER! 🦄🌟',
+    'PERSONAL BEST SMASHED!! You\'re on another level! 🦄🏆🌟',
+    'NEW PB!! The leaderboard just got shaken up! 🦄🌟🏆',
+    'YOU JUST BEAT YOURSELF!! That\'s the hardest opponent! 🦄🌟✨',
+    'PERSONAL BEST!! Write this one down! 🦄📸🌟'
+  ];
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  const isPB = scores.length===0 || pctNum > Math.max.apply(null, scores.map(function(s){ return s.pct||0; }));
+  const opener = reason==='monster'?pick(MO):reason==='edge'?pick(EO):reason==='baked'?pick(TO):pick(BO);
+  const compliment = pick(BANDS[band]);
+  const pbMsg = isPB ? '\n\n🌟 '+pick(PB) : '';
+
+  document.getElementById('go-flavor').textContent = opener+'\n\n'+compliment+pbMsg;
 
   const url='https://game.amyhackmannconsulting.com/';
   const pctShare=((baked/TOTAL)*100).toFixed(1);
@@ -1030,8 +1116,7 @@ const WORKER_READY = !WORKER_URL.includes('REPLACE_WITH');
 
 // Daily date helpers — returns "04 May 2026" style strings
 function dateStrOffset(daysAgo){
-  const d=new Date();
-  d.setUTCDate(d.getUTCDate()-daysAgo);
+  const d=utcGameDay(daysAgo);
   return d.getUTCDate().toString().padStart(2,'0')+' '+
     ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]+' '+
     d.getUTCFullYear();
@@ -1063,7 +1148,7 @@ async function fetchScores(){
 async function saveScore(){
   const ini = getInitialsValue();
   const pct=parseFloat(((baked/TOTAL)*100).toFixed(1));
-  const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,monsters:showMonsters,ts:Date.now()};
+  const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,monsters:peekedMonsters,ts:Date.now()};
 
   if(!WORKER_READY){
     scores.push(entry);
@@ -1304,6 +1389,7 @@ function toast(msg){
 // V2: toggle monster visibility
 function toggleMonsters(){
   showMonsters=!showMonsters;
+  if(showMonsters) peekedMonsters=true;
   const btn=document.getElementById('btn-show-monsters');
   if(btn){
     btn.innerHTML=showMonsters
