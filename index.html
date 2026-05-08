@@ -1031,18 +1031,25 @@ function endGame(reason){
 
   const url='https://game.amyhackmannconsulting.com/';
   const pctShare=((baked/TOTAL)*100).toFixed(1);
+  const typeIcon=isDaily?'📅':'🎮';
+  const monIcon=peekedMonsters?'👾':'🙈';
+  const badge=getBadge(parseFloat(pctShare));
+  const durShare=gameStartTime?formatDuration(Date.now()-gameStartTime):'-';
+  const dateShortShare=dateStr().replace(/(\d{4})$/,function(y){return y.slice(2);});
+  const ini=getInitialsValue();
+  const summaryLine=typeIcon+' '+badge+' '+ini+'  '+pctShare+'%  '+monIcon+'  '+baked+'/'+TOTAL+'  '+durShare+'  '+dateShortShare;
   if(isDaily){
     document.getElementById('share-text').textContent=
       '🦄 Unicorn Cookie Bakery 🍪\n'+
       'Daily Challenge — '+dateStr()+'\n'+
-      'I baked '+baked+' of '+TOTAL+' cookies ('+pctShare+'%) 🍪✨\n\n'+
+      summaryLine+'\n\n'+
       'Can you beat me? 🦄\n\n'+
       '🕹️ Play now → '+url+'\n'+
       '#UnicornCookieBakery #BakeThemAll 🦄🍪';
   } else {
     document.getElementById('share-text').textContent=
       '🦄 Unicorn Cookie Bakery 🍪\n'+
-      'I baked '+baked+' of '+TOTAL+' cookies ('+pctShare+'%) 🍪✨\n'+
+      summaryLine+'\n'+
       'Can you beat me? 🦄\n\n'+
       '🕹️ Play now → '+url+'\n'+
       '#UnicornCookieBakery #BakeThemAll 🦄🍪';
@@ -1521,16 +1528,22 @@ function copyShare(){
   if(!txt || !txt.trim()){
     const url='https://game.amyhackmannconsulting.com/';
     const pct=((baked/TOTAL)*100).toFixed(1);
+    const tIcon=isDaily?'📅':'🎮';
+    const mIcon=peekedMonsters?'👾':'🙈';
+    const b=getBadge(parseFloat(pct));
+    const dur=gameStartTime?formatDuration(Date.now()-gameStartTime):'-';
+    const ds=dateStr().replace(/(\d{4})$/,function(y){return y.slice(2);});
+    const sumLine=tIcon+' '+b+' '+getInitialsValue()+'  '+pct+'%  '+mIcon+'  '+baked+'/'+TOTAL+'  '+dur+'  '+ds;
     if(isDaily){
       txt='🦄 Unicorn Cookie Bakery 🍪\n'+
           'Daily Challenge — '+dateStr()+'\n'+
-          'I baked '+baked+' of '+TOTAL+' cookies ('+pct+'%) 🍪✨\n\n'+
+          sumLine+'\n\n'+
           'Can you beat me? 🦄\n\n'+
           '🕹️ Play now → '+url+'\n'+
           '#UnicornCookieBakery #BakeThemAll 🦄🍪';
     } else {
       txt='🦄 Unicorn Cookie Bakery 🍪\n'+
-          'I baked '+baked+' of '+TOTAL+' cookies ('+pct+'%) 🍪✨\n'+
+          sumLine+'\n'+
           'Can you beat me? 🦄\n\n'+
           '🕹️ Play now → '+url+'\n'+
           '#UnicornCookieBakery #BakeThemAll 🦄🍪';
@@ -1646,19 +1659,25 @@ function shareGame(withStats){
 
   if(withStats && baked>0){
     const pct=((baked/TOTAL)*100).toFixed(1);
+    const tIcon=isDaily?'📅':'🎮';
+    const mIcon=peekedMonsters?'👾':'🙈';
+    const b=getBadge(parseFloat(pct));
+    const dur=gameStartTime?formatDuration(Date.now()-gameStartTime):'-';
+    const ds=dateStr().replace(/(\d{4})$/,function(y){return y.slice(2);});
+    const sumLine=tIcon+' '+b+' '+getInitialsValue()+'  '+pct+'%  '+mIcon+'  '+baked+'/'+TOTAL+'  '+dur+'  '+ds;
     title='Unicorn Cookie Bakery 🦄🍪';
     if(isDaily){
       text=
         '🦄 Unicorn Cookie Bakery 🍪\n'+
         'Daily Challenge — '+dateStr()+'\n'+
-        'I baked '+baked+' of '+TOTAL+' cookies ('+pct+'%) 🍪✨\n\n'+
+        sumLine+'\n\n'+
         'Can you beat me? 🦄\n\n'+
         '🕹️ Play now → '+url+'\n'+
         '#UnicornCookieBakery #BakeThemAll 🦄🍪';
     } else {
       text=
         '🦄 Unicorn Cookie Bakery 🍪\n'+
-        'I baked '+baked+' of '+TOTAL+' cookies ('+pct+'%) 🍪✨\n'+
+        sumLine+'\n'+
         'Can you beat me? 🦄\n\n'+
         '🕹️ Play now → '+url+'\n'+
         '#UnicornCookieBakery #BakeThemAll 🦄🍪';
