@@ -1264,8 +1264,8 @@ const SR_HOF_PB=[
 
 function pickMsg(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-function showSaveResult(pct, newScores, newHof, oldHof){
-  const ini = getInitialsValue();
+function showSaveResult(pct, newScores, newHof, oldHof, ini){
+  if(!ini) ini = getInitialsValue();
 
   // ── HOF checks ──
   const oldHofEntry = oldHof.find(function(s){ return s.ini===ini; });
@@ -1404,7 +1404,7 @@ async function saveScore(){
   hideDetail(); hideGobar();
   activeScoresTab = isDaily ? 'daily' : 'all';
   openPopup('scores'); renderScores();
-  setTimeout(function(){ showSaveResult(pct, scores, hofData, oldHof); }, 400);
+  setTimeout(function(){ showSaveResult(pct, scores, hofData, oldHof, ini); }, 400);
 }
 
 function clearScores(){
