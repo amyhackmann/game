@@ -647,6 +647,7 @@ let hofData=[]; // Hall of Fame weeks
 let SZ=20;
 let showMonsters=false; // V2: show/hide monsters toggle
 let peekedMonsters=false; // true if monsters were shown at any point this game
+let gameStartTime=0; // timestamp when current game started
 
 function pickGrid(){
   const W=window.innerWidth, H=window.innerHeight, land=W>H;
@@ -735,7 +736,9 @@ function utcGameDay(daysAgo) {
   const d=new Date();
   // If before noon UTC, we're still in the previous game day
   const hourOffset = d.getUTCHours() < 12 ? -1 : 0;
-  d.setUTCDate(d.getUTCDate() + hourOffset - daysAgo);
+  // Apply hour offset first, then subtract daysAgo separately
+  d.setUTCDate(d.getUTCDate() + hourOffset);
+  if(daysAgo) d.setUTCDate(d.getUTCDate() - daysAgo);
   return d;
 }
 function todaySeed(){
@@ -750,9 +753,18 @@ function dateStr(){
   return day+' '+mon+' '+yr;
 }
 
+function formatDuration(ms){
+  const s=Math.floor(ms/1000);
+  const hh=Math.floor(s/3600).toString().padStart(2,'0');
+  const mm=Math.floor((s%3600)/60).toString().padStart(2,'0');
+  const ss=(s%60).toString().padStart(2,'0');
+  return hh+':'+mm+':'+ss;
+}
+
 function startGame(daily){
   isDaily=daily; baked=0; active=true;
-  peekedMonsters=false;
+  gameStartTime=0; // reset — will start on first tap
+  peekedMonsters=showMonsters; // if monsters already visible when game starts, count as peeked
   // V2: close all popups when game starts
   document.querySelectorAll('.popup.open').forEach(p=>p.classList.remove('open'));
   hideGobar(); hideDetail();
@@ -830,6 +842,7 @@ function getAdj(){
 
 function tap(tx,ty){
   if(!active) return;
+  if(!gameStartTime) gameStartTime=Date.now(); // start timer on first tap
   const dx=tx-pos.x,dy=ty-pos.y,steps=grid[ty][tx].n;
   grid[pos.y][pos.x].s='b'; baked++;
   let cx=tx,cy=ty,hitM=false,hitE=false,hitB=false;
@@ -1312,7 +1325,7 @@ function closeSaveResult(){
 async function saveScore(){
   const ini = getInitialsValue();
   const pct=parseFloat(((baked/TOTAL)*100).toFixed(1));
-  const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,monsters:peekedMonsters,ts:Date.now()};
+  const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,monsters:peekedMonsters,duration:formatDuration(Date.now()-gameStartTime),ts:Date.now()};
   const oldHof=[...hofData];
 
 
@@ -1405,7 +1418,8 @@ function renderScores(){
     const monIcon=s.monsters===true?'👾':s.monsters===false?'🙈':'';
     const cookies=(s.baked!=null&&s.total!=null)?(s.baked+'/'+s.total):'-';
     const b=getBadge(s.pct, s.badge);
-    const dateShort=s.date||'-';
+    const dur=s.duration||'-';
+    const dateShort=s.date?s.date.replace(/(\d{4})$/,function(y){return y.slice(2);}):'-';
     return '<tr>'
       +(showType?'<td>'+typeIcon+'</td>':'')
       +'<td>'+b+'</td>'
@@ -1414,6 +1428,7 @@ function renderScores(){
       +'<td style="color:#00ff88">'+s.pct+'%</td>'
       +(monIcon?'<td>'+monIcon+'</td>':'<td></td>')
       +'<td style="color:#aaa">'+cookies+'</td>'
+      +'<td style="color:#aaa;font-size:7px">'+dur+'</td>'
       +'<td style="font-size:7px">'+dateShort+'</td>'
       +'</tr>';
   }
@@ -1428,8 +1443,8 @@ function renderScores(){
       el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO SCORES YET — START BAKING! 🦄🍪</p>';
       return;
     }
-    let h='<table class="stbl"><thead><tr><th></th><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
-    h+='<tr><td colspan="8" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🎮 Weekly Top 25 — Resets Every Monday</td></tr>';
+    let h='<table class="stbl"><thead><tr><th></th><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>TIME</th><th>DATE</th></tr></thead><tbody>';
+    h+='<tr><td colspan="9" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🎮 Weekly Top 25 — Resets Every Monday</td></tr>';
     scores.slice(0,25).forEach((s,i)=>{ h+=row(i+1,s,true); });
     el.innerHTML=h+'</tbody></table>';
     return;
@@ -1443,17 +1458,17 @@ function renderScores(){
       el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO DAILY SCORES YET — HIT 📅 DAILY! 🦄🍪</p>';
       return;
     }
-    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
+    let h='<table class="stbl"><thead><tr><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>TIME</th><th>DATE</th></tr></thead><tbody>';
     if(td.scores.length){
-      h+=sectionHeader('📅 '+td.date+' — TOP 10',7);
+      h+=sectionHeader('📅 '+td.date+' — TOP 10',8);
       td.scores.slice(0,10).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     if(p1.scores.length){
-      h+=sectionHeader('📅 '+p1.date+' — TOP 5',7);
+      h+=sectionHeader('📅 '+p1.date+' — TOP 5',8);
       p1.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     if(p2.scores.length){
-      h+=sectionHeader('📅 '+p2.date+' — TOP 5',7);
+      h+=sectionHeader('📅 '+p2.date+' — TOP 5',8);
       p2.scores.slice(0,5).forEach((s,i)=>{ h+=row(i+1,s,false); });
     }
     el.innerHTML=h+'</tbody></table>';
@@ -1466,9 +1481,9 @@ function renderScores(){
       el.innerHTML='<p style="text-align:center;font-size:9px;color:#888;margin:20px 0">NO HOF YET — KEEP BAKING! 🦄🏆</p>';
       return;
     }
-    let h='<table class="stbl"><thead><tr><th></th><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>DATE</th></tr></thead><tbody>';
-    h+='<tr><td colspan="8" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🏆 Hall Of Fame</td></tr>';
-    h+='<tr><td colspan="8" style="color:#aaa;font-size:8px;padding:3px 3px 3px;border-bottom:1px solid #ffd700">🏆 All-Time Personal Bests</td></tr>';
+    let h='<table class="stbl"><thead><tr><th></th><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>TIME</th><th>DATE</th></tr></thead><tbody>';
+    h+='<tr><td colspan="9" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🏆 Hall Of Fame</td></tr>';
+    h+='<tr><td colspan="9" style="color:#aaa;font-size:8px;padding:3px 3px 3px;border-bottom:1px solid #ffd700">🏆 All-Time Personal Bests</td></tr>';
     hofData.slice(0,25).forEach((s,i)=>{ h+=row(i+1,s,true); });
     el.innerHTML=h+'</tbody></table>';
     return;
