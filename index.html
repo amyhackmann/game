@@ -729,14 +729,12 @@ function rng(seed){
   let s=seed;
   return ()=>{ s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; };
 }
-// Game day resets at midnight AEST (14:00 UTC) — before 14:00 UTC = still "yesterday's" game day
+// Game day = AEST date (UTC+10). Add 10 hours to UTC to get AEST date.
 function utcGameDay(daysAgo) {
   if(daysAgo===undefined) daysAgo=0;
   const d=new Date();
-  // Midnight AEST = 14:00 UTC
-  const hourOffset = d.getUTCHours() < 14 ? -1 : 0;
-  // Apply hour offset first, then subtract daysAgo separately
-  d.setUTCDate(d.getUTCDate() + hourOffset);
+  // Shift to AEST (UTC+10) to get the correct calendar date
+  d.setUTCHours(d.getUTCHours() + 10);
   if(daysAgo) d.setUTCDate(d.getUTCDate() - daysAgo);
   return d;
 }
