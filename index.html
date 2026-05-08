@@ -586,7 +586,7 @@ html, body {
 
 <!-- SAVE RESULT POPUP -->
 <div class="popup" id="popup-saveresult">
-  <div class="popup-box" style="text-align:center;max-width:320px">
+  <div class="popup-box" style="text-align:center;max-width:380px;width:100%">
     <h2 id="saveresult-title" style="font-size:10px;margin-bottom:8px"></h2>
     <div id="saveresult-score" style="font-size:8px;color:#00ff88;margin-bottom:8px;line-height:2"></div>
     <p id="saveresult-msg" style="font-size:9px;color:#ddd;line-height:2;margin-bottom:16px"></p>
@@ -1037,7 +1037,9 @@ function endGame(reason){
   const durShare=gameStartTime?formatDuration(Date.now()-gameStartTime):'-';
   const dateShortShare=dateStr().replace(/(\d{4})$/,function(y){return y.slice(2);});
   const ini=getInitialsValue();
-  const summaryLine=typeIcon+' '+badge+' '+ini+'  '+pctShare+'%  '+monIcon+'  '+baked+'/'+TOTAL+'  '+durShare+'  '+dateShortShare;
+  const iniStr=(ini==='???')?'':''+ini+'  ';
+  // Daily already has date in header — omit from summary line
+  const summaryLine=typeIcon+' '+badge+' '+iniStr+pctShare+'%  '+monIcon+'  '+baked+'/'+TOTAL+'  '+durShare+(isDaily?'':'  '+dateShortShare);
   if(isDaily){
     document.getElementById('share-text').textContent=
       '🦄 Unicorn Cookie Bakery 🍪\n'+
@@ -1330,7 +1332,7 @@ function showSaveResult(pct, newScores, newHof, oldHof){
   const badge=getBadge(pct);
   const dateShort=dateStr().replace(/(\d{4})$/,function(y){return y.slice(2);});
   const scoreEl=document.getElementById('saveresult-score');
-  scoreEl.innerHTML='<table style="margin:0 auto;border-collapse:collapse;font-size:8px;font-family:\'Press Start 2P\',monospace">'+
+  scoreEl.innerHTML='<table style="margin:0 auto;border-collapse:collapse;font-size:7px;font-family:\'Press Start 2P\',monospace;white-space:nowrap">'+
     '<tr>'+
     '<td style="padding:2px 3px">'+typeIcon+'</td>'+
     '<td style="padding:2px 3px">'+badge+'</td>'+
@@ -1533,7 +1535,8 @@ function copyShare(){
     const b=getBadge(parseFloat(pct));
     const dur=gameStartTime?formatDuration(Date.now()-gameStartTime):'-';
     const ds=dateStr().replace(/(\d{4})$/,function(y){return y.slice(2);});
-    const sumLine=tIcon+' '+b+' '+getInitialsValue()+'  '+pct+'%  '+mIcon+'  '+baked+'/'+TOTAL+'  '+dur+'  '+ds;
+    const iniPart=(getInitialsValue()==='???')?'':getInitialsValue()+'  ';
+    const sumLine=tIcon+' '+b+' '+iniPart+pct+'%  '+mIcon+'  '+baked+'/'+TOTAL+'  '+dur+(isDaily?'':'  '+ds);
     if(isDaily){
       txt='🦄 Unicorn Cookie Bakery 🍪\n'+
           'Daily Challenge — '+dateStr()+'\n'+
@@ -1664,7 +1667,8 @@ function shareGame(withStats){
     const b=getBadge(parseFloat(pct));
     const dur=gameStartTime?formatDuration(Date.now()-gameStartTime):'-';
     const ds=dateStr().replace(/(\d{4})$/,function(y){return y.slice(2);});
-    const sumLine=tIcon+' '+b+' '+getInitialsValue()+'  '+pct+'%  '+mIcon+'  '+baked+'/'+TOTAL+'  '+dur+'  '+ds;
+    const iniPart=(getInitialsValue()==='???')?'':getInitialsValue()+'  ';
+    const sumLine=tIcon+' '+b+' '+iniPart+pct+'%  '+mIcon+'  '+baked+'/'+TOTAL+'  '+dur+(isDaily?'':'  '+ds);
     title='Unicorn Cookie Bakery 🦄🍪';
     if(isDaily){
       text=
