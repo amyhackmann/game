@@ -557,9 +557,9 @@ html, body {
     <div class="sec" style="padding:6px 8px;margin-top:4px">
       <p style="font-size:8px;color:#ff9ff3;margin-bottom:4px"><b>&#x1F4C5; DAILY CHALLENGE &amp; SCORING</b></p>
       <p style="font-size:9px;line-height:1.8">&#x1F4C5; Same grid for everyone, new one each day!</p>
-      <p style="font-size:9px;line-height:1.8">&#x1F4C5;&#x23F0; Resets Noon UTC — Unicorn Cookie Time! &#x1F984;&#x1F36A;&#x1F55B;</p>
+      <p style="font-size:9px;line-height:1.8">&#x1F4C5;&#x23F0; Resets Midnight AEST — Unicorn Cookie Time! &#x1F984;&#x1F36A;&#x1F55B;</p>
       <p style="font-size:9px;line-height:1.8" id="scoring-text">&#x1F3C6; Score = Cookies Baked &divide; Total Grid</p>
-      <p style="font-size:9px;line-height:1.8">&#x1F3AE;&#x23F0; Weekly scores reset Mon Noon UTC</p>
+      <p style="font-size:9px;line-height:1.8">&#x1F3AE;&#x23F0; Weekly scores reset Mon Midnight AEST</p>
     </div>
     <div style="text-align:center;margin-top:8px">
       <button class="overlay-btn" onclick="closePopup('howto')">&#x2715; CLOSE</button>
@@ -589,7 +589,8 @@ html, body {
 <!-- SAVE RESULT POPUP -->
 <div class="popup" id="popup-saveresult">
   <div class="popup-box" style="text-align:center;max-width:320px">
-    <h2 id="saveresult-title" style="font-size:10px;margin-bottom:12px"></h2>
+    <h2 id="saveresult-title" style="font-size:10px;margin-bottom:8px"></h2>
+    <div id="saveresult-score" style="font-size:8px;color:#00ff88;margin-bottom:8px;line-height:2"></div>
     <p id="saveresult-msg" style="font-size:9px;color:#ddd;line-height:2;margin-bottom:16px"></p>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
       <button class="overlay-btn" onclick="copyShare()"><span style="font-size:13px">&#x1F4E4;</span> SHARE</button>
@@ -730,12 +731,12 @@ function rng(seed){
   let s=seed;
   return ()=>{ s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; };
 }
-// Game day resets at noon UTC — before noon = still "yesterday's" game day
+// Game day resets at midnight AEST (14:00 UTC) — before 14:00 UTC = still "yesterday's" game day
 function utcGameDay(daysAgo) {
   if(daysAgo===undefined) daysAgo=0;
   const d=new Date();
-  // If before noon UTC, we're still in the previous game day
-  const hourOffset = d.getUTCHours() < 12 ? -1 : 0;
+  // Midnight AEST = 14:00 UTC
+  const hourOffset = d.getUTCHours() < 14 ? -1 : 0;
   // Apply hour offset first, then subtract daysAgo separately
   d.setUTCDate(d.getUTCDate() + hourOffset);
   if(daysAgo) d.setUTCDate(d.getUTCDate() - daysAgo);
@@ -1315,6 +1316,28 @@ function showSaveResult(pct, newScores, newHof, oldHof){
 
   document.getElementById('saveresult-title').textContent=title;
   document.getElementById('saveresult-msg').textContent=msg;
+
+  // Score summary — matches leaderboard row style
+  const ini=getInitialsValue();
+  const dur=gameStartTime?formatDuration(Date.now()-gameStartTime):'-';
+  const cookies=baked+'/'+TOTAL;
+  const typeIcon=isDaily?'📅':'🎮';
+  const monIcon=peekedMonsters?'👾':'🙈';
+  const badge=getBadge(pct);
+  const dateShort=dateStr().replace(/(\d{4})$/,function(y){return y.slice(2);});
+  const scoreEl=document.getElementById('saveresult-score');
+  scoreEl.innerHTML='<table style="margin:0 auto;border-collapse:collapse;font-size:8px;font-family:\'Press Start 2P\',monospace">'+
+    '<tr>'+
+    '<td style="padding:2px 3px">'+typeIcon+'</td>'+
+    '<td style="padding:2px 3px">'+badge+'</td>'+
+    '<td style="padding:2px 3px;color:#ffd700">'+ini+'</td>'+
+    '<td style="padding:2px 3px;color:#00ff88">'+pct+'%</td>'+
+    '<td style="padding:2px 3px">'+monIcon+'</td>'+
+    '<td style="padding:2px 3px;color:#aaa">'+cookies+'</td>'+
+    '<td style="padding:2px 3px;color:#aaa;font-size:7px">'+dur+'</td>'+
+    '<td style="padding:2px 3px;font-size:7px">'+dateShort+'</td>'+
+    '</tr></table>';
+
   openPopup('saveresult');
 }
 
