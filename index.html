@@ -1471,7 +1471,7 @@ function renderScores(){
       return;
     }
     let h='<table class="stbl"><thead><tr><th></th><th></th><th>#</th><th>NAME</th><th>%</th><th></th><th>🍪/TOTAL</th><th>TIME</th><th>DATE</th></tr></thead><tbody>';
-    h+='<tr><td colspan="9" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🎮 Weekly Top 25 — Resets Every Monday</td></tr>';
+    h+='<tr><td colspan="9" style="color:#ffd700;font-size:8px;padding:6px 3px 3px;border-bottom:1px solid #ffd700">🎮 Weekly Top 25 — Resets Every Sun Midnight AEST</td></tr>';
     scores.slice(0,25).forEach((s,i)=>{ h+=row(i+1,s,true); });
     el.innerHTML=h+'</tbody></table>';
     return;
