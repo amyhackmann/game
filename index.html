@@ -1403,7 +1403,6 @@ function showSaveResult(pct, newScores, newHof, oldHof, ini){
   document.getElementById('saveresult-msg').textContent=msg;
 
   // Score summary — matches leaderboard row style
-  const dur=gameStartTime?formatDuration(Date.now()-gameStartTime):'-';
   const cookies=baked+'/'+TOTAL;
   const typeIcon=isDaily?'📅':'🎮';
   const monIcon=peekedMonsters?'👾':'🙈';
