@@ -1189,6 +1189,14 @@ const SR_MADE_WEEKLY=[
   '#{rank} THIS WEEK! Can you climb higher? 🦄🏆🔥',
   '#{rank} ON THE WEEKLY LEADERBOARD! The Unicorn is RISING! 🦄🍪'
 ];
+// Weekly with time — only used when duration is available
+const SR_MADE_WEEKLY_TIMED=[
+  '#{rank} THIS WEEK in {time}! Speed AND skill — unstoppable! 🦄⚡🏆',
+  '#{rank} ON THE WEEKLY in just {time}! The grid had no chance! 🦄⚡🍪',
+  '{time} AND #{rank} THIS WEEK! Your Unicorn is FAST! ⚡🦄🏆',
+  '#{rank} WEEKLY in {time}! Baking at lightning speed! ⚡🦄👑',
+  'WEEKLY #{rank} in {time}! That\'s elite baking right there! 🦄⚡🔥'
+];
 const SR_MADE_DAILY=[
   'YOU MADE TODAY\'S DAILY! You\'re #{rank} today! 🦄📅🏆',
   '#{rank} ON TODAY\'S DAILY LEADERBOARD! 🦄📅🍪',
@@ -1200,6 +1208,14 @@ const SR_MADE_DAILY=[
   '#{rank} ON THE DAILY! Your baking is on fire! 🦄🍪👑',
   '#{rank} DAILY! Can you top it tomorrow? 🦄🏆🔥📅',
   '#{rank} ON TODAY\'S LEADERBOARD! The Unicorn is RISING! 🦄🍪📅'
+];
+// Daily with time — only used when duration is available
+const SR_MADE_DAILY_TIMED=[
+  '#{rank} TODAY in {time}! Fast AND delicious! ⚡📅🦄',
+  'DAILY #{rank} in just {time}! The grid never saw you coming! 🦄⚡📅',
+  '#{rank} ON THE DAILY in {time}! Your Unicorn is on FIRE! 🔥⚡📅',
+  '{time} to crack the Daily board at #{rank}! Baking speed unlocked! ⚡🦄🍪',
+  '#{rank} DAILY in {time}! Can you go faster tomorrow? ⚡📅🏆'
 ];
 const SR_MISS_WEEKLY=[
   '{pct}% — not on the Weekly leaderboard yet! One more game! 🦄🍪🔥',
@@ -1249,6 +1265,14 @@ const SR_HOF_NEW=[
   'HALL OF FAME! The all-time leaderboard bows to you! 🏆🌟',
   'YOU MADE THE HOF! Screenshot this moment! 📸🦄🌟'
 ];
+// HOF new with time — only when duration available
+const SR_HOF_NEW_TIMED=[
+  'HALL OF FAME in {time}! Speed AND cookies — legendary! 🦄⚡🌟',
+  'HOF ENTRY in just {time}! The fastest baker in the hall! ⚡🦄🏆',
+  '{time} to make the Hall of Fame! That\'s Unicorn speed! 🦄⚡🌟',
+  'ALL-TIME PERSONAL BEST in {time}! The HOF bows to you! 🏆⚡🦄',
+  'HOF UNLOCKED in {time}! Speed legend status achieved! ⚡🌟🦄'
+];
 const SR_HOF_PB=[
   'NEW PERSONAL BEST! Your HOF rank just improved! 🦄🏆',
   'PB SMASHED! You climbed the Hall of Fame! 🦄🌟👑',
@@ -1261,17 +1285,46 @@ const SR_HOF_PB=[
   'BEAT YOUR OWN RECORD! That\'s the hardest win! 🌟🏆',
   'NEW PERSONAL BEST! The HOF salutes you! 🦄🌟🏆'
 ];
+// HOF PB with time — only when duration available
+const SR_HOF_PB_TIMED=[
+  'NEW PB in {time}! Faster AND better — you\'re unstoppable! 🦄⚡🌟',
+  'PB SMASHED in {time}! The HOF just got an upgrade! ⚡🦄🏆',
+  '{time} for a new personal best! Speed records are falling! ⚡🌟🦄',
+  'HOF RANK UP in {time}! Your Unicorn keeps getting faster! 🦄⚡👑',
+  'BEAT YOURSELF in {time}! That\'s the hardest win of all! ⚡🌟🏆'
+];
+// HOF tiebreaker — same % but faster time
+const SR_HOF_SPEED=[
+  'SAME COOKIES, FASTER TIME! {time} — you just climbed the HOF! ⚡🦄👑',
+  'SPEED WINS THE TIE! {time} puts you AHEAD in the Hall of Fame! ⚡🏆🦄',
+  'FASTER BAKER WINS! {time} — your HOF rank just improved! ⚡🍪👑',
+  'TIE BROKEN BY SPEED! {time} — the HOF knows your name now! ⚡🦄🌟',
+  '{time}! Same cookies, less time — that\'s a new personal best! ⚡🦄🏆'
+];
 
 function pickMsg(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
+// Pick timed message if duration available, else fall back to plain array
+function pickTimedMsg(timedArr, plainArr, time){
+  if(time && time !== '-' && timedArr.length){
+    // 60% chance of timed message for variety
+    if(Math.random() < 0.6) return pickMsg(timedArr).replace(/{time}/g, time);
+  }
+  return pickMsg(plainArr);
+}
+
 function showSaveResult(pct, newScores, newHof, oldHof, ini){
   if(!ini) ini = getInitialsValue();
+  const dur = gameStartTime ? formatDuration(Date.now()-gameStartTime) : '-';
 
   // ── HOF checks ──
   const oldHofEntry = oldHof.find(function(s){ return s.ini===ini; });
   const newHofEntry = newHof.find(function(s){ return s.ini===ini; });
   const hofNew      = newHofEntry && !oldHofEntry;
   const hofImproved = newHofEntry && oldHofEntry && newHofEntry.pct > oldHofEntry.pct;
+  // Tiebreaker: same pct but faster time
+  const hofSpeedPB  = newHofEntry && oldHofEntry && newHofEntry.pct === oldHofEntry.pct &&
+                      newHofEntry.ts > oldHofEntry.ts;
 
   // ── Weekly rank check ──
   const weeklyIdx = newScores.findIndex(function(s){ return s.pct===pct && s.ini===ini; });
@@ -1293,26 +1346,28 @@ function showSaveResult(pct, newScores, newHof, oldHof, ini){
 
   var title, msg;
 
-  // Priority: HOF new > HOF PB > Weekly > Daily > Miss
-  if(hofNew){
+  // Priority: HOF speed PB > HOF new > HOF PB > Weekly > Daily > Miss
+  if(hofSpeedPB){
+    title='⚡ FASTER TIME!';
+    msg=pickMsg(SR_HOF_SPEED).replace(/{time}/g, dur);
+  } else if(hofNew){
     title='🏆 HALL OF FAME!';
-    msg=pickMsg(SR_HOF_NEW);
+    msg=pickTimedMsg(SR_HOF_NEW_TIMED, SR_HOF_NEW, dur);
   } else if(hofImproved){
     title='🌟 PERSONAL BEST!';
-    msg=pickMsg(SR_HOF_PB);
+    msg=pickTimedMsg(SR_HOF_PB_TIMED, SR_HOF_PB, dur);
   } else if(onWeekly){
     title='🎉 ON THE WEEKLY!';
-    msg=pickMsg(SR_MADE_WEEKLY).replace(/#{rank}/g, rankSuffix(weeklyIdx));
+    msg=pickTimedMsg(SR_MADE_WEEKLY_TIMED, SR_MADE_WEEKLY, dur).replace(/#{rank}/g, rankSuffix(weeklyIdx));
   } else if(onDaily){
     title='📅 ON THE DAILY!';
-    msg=pickMsg(SR_MADE_DAILY).replace(/#{rank}/g, rankSuffix(dailyRank));
+    msg=pickTimedMsg(SR_MADE_DAILY_TIMED, SR_MADE_DAILY, dur).replace(/#{rank}/g, rankSuffix(dailyRank));
   } else {
-    // Missed all — show specific message based on game type
+    // Missed all — % focused only, no time mentioned
     title='🦄 KEEP BAKING!';
     if(isDaily){
       msg=pickMsg(SR_MISS_DAILY).replace(/{pct}/g, pct+'%');
     } else if(!newHofEntry){
-      // Not on weekly AND not in HOF
       msg=pickMsg(SR_MISS_HOF).replace(/{pct}/g, pct+'%');
     } else {
       msg=pickMsg(SR_MISS_WEEKLY).replace(/{pct}/g, pct+'%');
