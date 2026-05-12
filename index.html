@@ -1195,7 +1195,12 @@ const SR_MADE_WEEKLY_TIMED=[
   '#{rank} ON THE WEEKLY in just {time}! The grid had no chance! 🦄⚡🍪',
   '{time} AND #{rank} THIS WEEK! Your Unicorn is FAST! ⚡🦄🏆',
   '#{rank} WEEKLY in {time}! Baking at lightning speed! ⚡🦄👑',
-  'WEEKLY #{rank} in {time}! That\'s elite baking right there! 🦄⚡🔥'
+  'WEEKLY #{rank} in {time}! That\'s elite baking right there! 🦄⚡🔥',
+  '{time} to claim #{rank} this week! The leaderboard noticed! ⚡🦄🍪',
+  '#{rank} AND COUNTING in {time}! Come back and go faster! ⚡🦄🔥',
+  'SPEED BAKER ALERT! #{rank} this week in {time}! 🦄⚡👑',
+  '{time}! #{rank} on the Weekly — your Unicorn is FLYING! ⚡🦄🏆',
+  '#{rank} THIS WEEK in {time}! The competition is shaking! ⚡🍪👑'
 ];
 const SR_MADE_DAILY=[
   'YOU MADE TODAY\'S DAILY! You\'re #{rank} today! 🦄📅🏆',
@@ -1215,7 +1220,12 @@ const SR_MADE_DAILY_TIMED=[
   'DAILY #{rank} in just {time}! The grid never saw you coming! 🦄⚡📅',
   '#{rank} ON THE DAILY in {time}! Your Unicorn is on FIRE! 🔥⚡📅',
   '{time} to crack the Daily board at #{rank}! Baking speed unlocked! ⚡🦄🍪',
-  '#{rank} DAILY in {time}! Can you go faster tomorrow? ⚡📅🏆'
+  '#{rank} DAILY in {time}! Can you go faster tomorrow? ⚡📅🏆',
+  '{time} and #{rank} on the Daily! Lightning baker strikes again! ⚡🦄📅',
+  '#{rank} TODAY in {time}! The Daily grid bows to your speed! ⚡📅👑',
+  'SPEED AND COOKIES! #{rank} Daily in {time}! 🦄⚡🍪📅',
+  '{time}! #{rank} on today\'s leaderboard — nobody saw that coming! ⚡🦄🏆',
+  '#{rank} DAILY SPEED RECORD in {time}! Come back and defend it! ⚡📅🔥'
 ];
 const SR_MISS_WEEKLY=[
   '{pct}% — not on the Weekly leaderboard yet! One more game! 🦄🍪🔥',
@@ -1271,7 +1281,12 @@ const SR_HOF_NEW_TIMED=[
   'HOF ENTRY in just {time}! The fastest baker in the hall! ⚡🦄🏆',
   '{time} to make the Hall of Fame! That\'s Unicorn speed! 🦄⚡🌟',
   'ALL-TIME PERSONAL BEST in {time}! The HOF bows to you! 🏆⚡🦄',
-  'HOF UNLOCKED in {time}! Speed legend status achieved! ⚡🌟🦄'
+  'HOF UNLOCKED in {time}! Speed legend status achieved! ⚡🌟🦄',
+  '{time} AND a Hall of Fame entry?! You\'re unstoppable! ⚡🦄🏆🌟',
+  'FASTEST HOF ENTRY?! {time} is seriously impressive! ⚡🦄🌟👑',
+  'HOF BAKER in {time}! The legends welcome you at speed! ⚡🏆🦄',
+  '{time} to bake your way into the Hall of Fame! Screenshot this! 📸⚡🦄🌟',
+  'WELCOME TO THE HOF in {time}! Speed and skill — the full package! ⚡🦄🏆'
 ];
 const SR_HOF_PB=[
   'NEW PERSONAL BEST! Your HOF rank just improved! 🦄🏆',
@@ -1291,7 +1306,12 @@ const SR_HOF_PB_TIMED=[
   'PB SMASHED in {time}! The HOF just got an upgrade! ⚡🦄🏆',
   '{time} for a new personal best! Speed records are falling! ⚡🌟🦄',
   'HOF RANK UP in {time}! Your Unicorn keeps getting faster! 🦄⚡👑',
-  'BEAT YOURSELF in {time}! That\'s the hardest win of all! ⚡🌟🏆'
+  'BEAT YOURSELF in {time}! That\'s the hardest win of all! ⚡🌟🏆',
+  '{time} AND a new personal best! The HOF salutes your speed! ⚡🦄🌟',
+  'PERSONAL BEST BROKEN in {time}! You\'re getting DANGEROUS! ⚡🦄😤🌟',
+  'NEW PB ALERT! {time} — your Unicorn just levelled up! ⚡🦄🏆',
+  '{time}! HOF climbing AND getting faster! Nobody can stop you! ⚡🦄👑',
+  'YOUR BEST JUST GOT BETTER AND FASTER! {time} — legendary! ⚡🌟🏆'
 ];
 // HOF tiebreaker — same % but faster time
 const SR_HOF_SPEED=[
@@ -1299,7 +1319,12 @@ const SR_HOF_SPEED=[
   'SPEED WINS THE TIE! {time} puts you AHEAD in the Hall of Fame! ⚡🏆🦄',
   'FASTER BAKER WINS! {time} — your HOF rank just improved! ⚡🍪👑',
   'TIE BROKEN BY SPEED! {time} — the HOF knows your name now! ⚡🦄🌟',
-  '{time}! Same cookies, less time — that\'s a new personal best! ⚡🦄🏆'
+  '{time}! Same cookies, less time — that\'s a new personal best! ⚡🦄🏆',
+  'SPEED RECORD! Same %, but {time} is FASTER! HOF updated! ⚡🦄🌟',
+  'QUICKER BAKER! {time} breaks the tie and climbs the HOF! ⚡🍪🏆',
+  '{time}! You baked the same but FASTER — the HOF rewards speed! ⚡🦄👑',
+  'LIGHTNING UNICORN! {time} wins the tiebreaker! HOF rank UP! ⚡🦄🌟🏆',
+  'SAME SCORE, NEW SPEED RECORD! {time} — the Hall of Fame takes note! ⚡🦄🍪👑'
 ];
 
 function pickMsg(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
