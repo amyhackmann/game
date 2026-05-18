@@ -652,6 +652,7 @@ let SZ=20;
 let showMonsters=false; // V2: show/hide monsters toggle
 let peekedMonsters=false; // true if monsters were shown at any point this game
 let gameStartTime=0; // timestamp when current game started
+let gameDate=''; // AEST date string captured at game start (not save time)
 
 function pickGrid(){
   const W=window.innerWidth, H=window.innerHeight, land=W>H;
@@ -766,6 +767,7 @@ function formatDuration(ms){
 function startGame(daily){
   isDaily=daily; baked=0; active=true;
   gameStartTime=0; // reset — will start on first tap
+  gameDate=dateStr(); // capture AEST date at game start, not save time
   peekedMonsters=showMonsters; // if monsters already visible when game starts, count as peeked
   // V2: close all popups when game starts
   document.querySelectorAll('.popup.open').forEach(p=>p.classList.remove('open'));
@@ -1436,7 +1438,7 @@ function closeSaveResult(){
 async function saveScore(){
   const ini = getInitialsValue();
   const pct=parseFloat(((baked/TOTAL)*100).toFixed(1));
-  const entry={ini,pct,date:dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,monsters:peekedMonsters,duration:formatDuration(Date.now()-gameStartTime),ts:Date.now()};
+  const entry={ini,pct,date:gameDate||dateStr(),daily:isDaily,baked,total:TOTAL,cols:COLS,rows:ROWS,monsters:peekedMonsters,duration:formatDuration(Date.now()-gameStartTime),ts:Date.now()};
   const oldHof=[...hofData];
 
 
@@ -1475,15 +1477,12 @@ async function saveScore(){
     await fetchScores();
     toast('Score saved! 🦄🍪');
   } catch(e){
-    // Network blip — save locally as fallback so the score isn't lost
-    scores.push(entry);
-    scores.sort((a,b)=>b.pct-a.pct);
-    scores=scores.slice(0,25);
-    localStorage.setItem('mcb_v7',JSON.stringify(scores));
-    toast('Saved locally (offline) 🦄🍪');
-  } finally{
+    // Network failure — keep save panel open so player can retry
     if(saveBtn){ saveBtn.disabled=false; saveBtn.innerHTML='SAVE &#x1F4BE;'; }
+    toast('\u26a0\ufe0f Could not reach leaderboard — tap SAVE to retry!');
+    return; // Don't close the panel
   }
+  if(saveBtn){ saveBtn.disabled=false; saveBtn.innerHTML='SAVE &#x1F4BE;'; }
 
   hideDetail(); hideGobar();
   activeScoresTab = isDaily ? 'daily' : 'all';
